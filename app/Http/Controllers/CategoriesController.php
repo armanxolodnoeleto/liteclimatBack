@@ -6,11 +6,12 @@ use Illuminate\Support\Facades\DB;
 
 class CategoriesController extends Controller
 {
+    protected $projectId = 56;
+
     public function getCategories() {
-        $projectId = 56;
-        $productCategories = DB::table('product_categories')->orderBy('product_categories_order', 'desc')->where('project_id', $projectId)->select('*')->get()->toArray();
-        $data = $this->getSubCategory($productCategories);
-        return response()->json($data);
+        $productCategories = DB::table('product_categories')->orderBy('product_categories_order', 'desc')->where('project_id', $this->projectId)->select('*')->get()->toArray();
+        $categories = $this->getSubCategory($productCategories);
+        return response()->json($categories);
     }
 
     public function getSubCategory($data, $parent = 0) {
@@ -18,12 +19,12 @@ class CategoriesController extends Controller
         $categories = [];
         for ($i = 0; $i < count($data); $i++) {
             if ($data[$i]->product_categories_parent_id == $parent) {
-                $categories['name'] = $data[$i]->product_categories_name_ru;
-                $categories['id'] = $data[$i]->id;
-                $categories['sub'] = $this->getSubCategory($data, $data[$i]->id);
-                $category[] = $categories;
+                $category['name'] = $data[$i]->product_categories_name_ru;
+                $category['id'] = $data[$i]->id;
+                $category['sub'] = $this->getSubCategory($data, $data[$i]->id);
+                $categories[] = $category;
             }
         }
-        return $category;
+        return $categories;
     }
 }
