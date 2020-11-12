@@ -19,9 +19,11 @@ class CategoriesController extends Controller
         $categories = [];
         for ($i = 0; $i < count($data); $i++) {
             if ($data[$i]->product_categories_parent_id == $parent) {
+                if ($parent === 0) {
+                    $category['icon'] = $data[$i]->icon;
+                }
                 $category['name'] = $data[$i]->product_categories_name_ru;
                 $category['id'] = $data[$i]->id;
-                $category['icon'] = $data[$i]->icon;
                 $category['subCategories'] = $this->getSubCategory($data, $data[$i]->id);
                 $categories[] = $category;
             }
