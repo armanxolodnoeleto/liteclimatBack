@@ -21,7 +21,8 @@ class CategoriesController extends Controller
             if ($data[$i]->product_categories_parent_id == $parent) {
                 $category['name'] = $data[$i]->product_categories_name_ru;
                 $category['id'] = $data[$i]->id;
-                $category['sub'] = $this->getSubCategory($data, $data[$i]->id);
+                $category['icon'] = $data[$i]->icon;
+                $category['subCategories'] = $this->getSubCategory($data, $data[$i]->id);
                 $categories[] = $category;
             }
         }
