@@ -6,10 +6,9 @@ use Illuminate\Support\Facades\DB;
 
 class CategoriesController extends Controller
 {
-    protected $projectId = 56;
-
-    public function getCategories() {
-        $productCategories = DB::table('product_categories')->orderBy('product_categories_order', 'desc')->where('project_id', $this->projectId)->select('*')->get()->toArray();
+    public function getCategories(Request $request) {
+        $projectId = $request->projectId;
+        $productCategories = DB::table('product_categories')->orderBy('product_categories_order', 'desc')->where('project_id', $projectId)->select(['id', 'product_categories_name_ru', 'product_categories_parent_id', 'icon'])->get()->toArray();
         $categories = $this->getSubCategory($productCategories);
         return response()->json($categories);
     }
