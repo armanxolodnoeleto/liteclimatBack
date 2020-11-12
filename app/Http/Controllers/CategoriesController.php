@@ -25,6 +25,12 @@ class CategoriesController extends Controller
                 $category['name'] = $data[$i]->product_categories_name_ru;
                 $category['id'] = $data[$i]->id;
                 $category['subCategories'] = $this->getSubCategory($data, $data[$i]->id);
+                if (empty($category['subCategories'])) {
+                    unset($category['subCategories']);
+                    if ($parent === 0) {
+                        continue;
+                    }
+                }
                 $categories[] = $category;
             }
         }
