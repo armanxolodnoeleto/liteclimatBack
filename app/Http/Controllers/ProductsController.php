@@ -8,7 +8,9 @@ use Illuminate\Support\Facades\DB;
 class ProductsController extends Controller
 {
     public function getProducts(Request $request) {
-        $projectId = $request->projectId;
+        $projectId = $request->header('projectid');
+        $page = $request->page;
+        $skip = ($page - 1) * 10;
         $projectId = 56;
         $products = DB::table('products_by_projects')
             ->join('products', 'products_by_projects.product_id', '=', 'products.id')
@@ -25,9 +27,10 @@ class ProductsController extends Controller
             ->where('product_series_photos.cover_photo', 1)
             ->where('photos.cover_photo', 1)
             ->select('products.id', 'products.name_ru as model', 'product_manufacturers.name_ru as brand', 'product_manufacturers.logo as brand_logo', 'product_series.series_name_ru as series_name', 'product_series_photos.folder as series_picture_folder', 'product_series_photos.file_name as series_picture_file_name', 'product_series_photos.file_format as series_picture_format', 'photos.folder as product_picture_folder', 'photos.file_name as product_picture_file_name', 'photos.file_format as product_picture_format', 'prices.price', 'prices.setup_price', 'characteristics.name_ru as characteristic_name_ru', 'characteristic_attributes.name_ru as characteristic_attribute_name')
-            ->skip(0)
+            ->skip($skip)
             ->take(10)
             ->get();
-        dd($products);
+
+        return response()->json($products);
     }
 }
