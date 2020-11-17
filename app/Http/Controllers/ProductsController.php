@@ -11,7 +11,6 @@ class ProductsController extends Controller
         $projectId = $request->header('projectId');
         $page = $request->page;
         $skip = ($page - 1) * 10;
-        $projectId = 56;
 
         $products = DB::table('products_by_projects')
             ->join('product_to_categories', 'products_by_projects.product_id', '=', 'product_to_categories.product_id')
