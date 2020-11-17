@@ -7,13 +7,15 @@ use Illuminate\Support\Facades\DB;
 
 class ProductsController extends Controller
 {
-    public function getProducts(Request $request) {
-        $projectId = $request->header('projectid');
+    public function getProducts(Request $request, $categoryId) {
+        $projectId = $request->header('projectId');
         $page = $request->page;
         $skip = ($page - 1) * 10;
         $projectId = 56;
+
         $products = DB::table('products_by_projects')
             ->join('products', 'products_by_projects.product_id', '=', 'products.id')
+            ->join('product_to_categories', 'products_by_projects.product_id', '=', 'product_to_categories.product_id')
             ->leftJoin('product_manufacturers', 'products.manufacturer_id', '=', 'product_manufacturers.id')
             ->leftJoin('product_series', 'products.series_id', '=', 'product_series.id')
             ->leftJoin('product_series_photos', 'product_series.id', '=', 'product_series_photos.id')
@@ -23,6 +25,7 @@ class ProductsController extends Controller
             ->leftJoin('characteristics', 'product_characteristics.characteristic_id', '=', 'characteristics.id')
             ->leftJoin('characteristic_attributes', 'product_characteristics.attribute_id', '=', 'characteristic_attributes.id')
             ->where('products_by_projects.project_id', $projectId)
+            ->where('product_to_categories.category_id', $categoryId)
             ->where('product_characteristics.characteristic_id', 3)
             ->where('product_series_photos.cover_photo', 1)
             ->where('photos.cover_photo', 1)
