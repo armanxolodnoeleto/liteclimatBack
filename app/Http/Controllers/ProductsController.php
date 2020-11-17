@@ -14,8 +14,8 @@ class ProductsController extends Controller
         $projectId = 56;
 
         $products = DB::table('products_by_projects')
-            ->join('products', 'products_by_projects.product_id', '=', 'products.id')
             ->join('product_to_categories', 'products_by_projects.product_id', '=', 'product_to_categories.product_id')
+            ->join('products', 'products_by_projects.product_id', '=', 'products.id')
             ->leftJoin('product_manufacturers', 'products.manufacturer_id', '=', 'product_manufacturers.id')
             ->leftJoin('product_series', 'products.series_id', '=', 'product_series.id')
             ->leftJoin('product_series_photos', 'product_series.id', '=', 'product_series_photos.id')
