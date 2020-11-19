@@ -22,6 +22,8 @@ class ProductsController extends Controller
             ->leftJoin('prices', 'products.id', '=', 'prices.product_id')
             ->where('products_by_projects.project_id', $projectId)
             ->where('product_to_categories.category_id', $categoryId)
+            ->where('prices.status', 1)
+            ->where('prices.price', '!=', 0)
             ->select('products.id', 'products.name as model', 'product_manufacturers.name as brand', 'product_manufacturers.logo as brand_logo', 'product_series.series_name_ru as series_name', 'product_series_photos.folder as series_picture_folder', 'product_series_photos.file_name as series_picture_file_name', 'product_series_photos.file_format as series_picture_format', 'photos.folder as product_picture_folder', 'photos.file_name as product_picture_file_name', 'photos.file_format as product_picture_format', 'prices.price', 'prices.setup_price')
             ->paginate(10);
 
