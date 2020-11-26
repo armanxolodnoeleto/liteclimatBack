@@ -116,7 +116,8 @@ class ProductsController extends Controller
 
         $data['manufacturerCountries'] = $manufacturerCountries;
         $data['characteristicAttributes'] = $characteristicAttributes;
-        dd($data);
+
+        return response()->json($data);
 
     }
 }
