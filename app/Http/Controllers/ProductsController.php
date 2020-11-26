@@ -86,4 +86,71 @@ class ProductsController extends Controller
 
         return response()->json($data);
     }
+
+    public function getFilterData(Request $request, $categoryId) {
+        $projectId = $request->header('projectId');
+        $data = [];
+
+        $query = DB::table('products_by_projects')
+            ->leftJoin('product_to_categories', 'products_by_projects.product_id', '=', 'product_to_categories.product_id')
+            ->leftJoin('products', 'products_by_projects.product_id', '=', 'products.id')
+            ->leftJoin('product_manufacturers', 'products.manufacturer_id', '=', 'product_manufacturers.id')
+            ->leftJoin('product_characteristics', 'products.id', '=', 'product_characteristics.product_id')
+            ->leftJoin('characteristic_attributes', 'characteristic_attributes.characteristic_id', '=', 'product_characteristics.characteristic_id')
+            ->where('products_by_projects.project_id', $projectId)
+            ->where('product_to_categories.category_id', $categoryId);
+
+        $manufacturerQuery = clone $query;
+        $manufacturerCountryQuery = clone $query;
+        $brandsQuery = clone $query;
+        $servicedAreaQuery = clone $query;
+        $energyClassQuery = clone $query;
+        $coolingQuery = clone $query;
+
+        $manufacturers = $manufacturerQuery
+            ->where('characteristic_attributes.characteristic_id', 14)
+            ->select('characteristic_attributes.name_ru', DB::raw('COUNT(*) as count'), 'product_manufacturers.logo', 'product_manufacturers.id')
+            ->groupBy('characteristic_attributes.name_ru', 'product_manufacturers.id', 'product_manufacturers.logo')
+            ->get();
+
+        $manufacturerCountry = $manufacturerCountryQuery
+            ->where('characteristic_attributes.characteristic_id', 14)
+            ->select('characteristic_attributes.name_ru', 'characteristic_attributes.id')
+            ->groupBy('characteristic_attributes.name_ru', 'characteristic_attributes.id')
+            ->get();
+
+        $brandsCountry = $brandsQuery
+            ->where('characteristic_attributes.characteristic_id', 15)
+            ->select('characteristic_attributes.name_ru', 'characteristic_attributes.id')
+            ->groupBy('characteristic_attributes.name_ru', 'characteristic_attributes.id')
+            ->get();
+
+        $servicedArea = $servicedAreaQuery
+            ->where('characteristic_attributes.characteristic_id', 3)
+            ->select('characteristic_attributes.name_ru', 'characteristic_attributes.id')
+            ->groupBy('characteristic_attributes.name_ru', 'characteristic_attributes.id')
+            ->get();
+
+        $energyClass = $energyClassQuery
+            ->where('characteristic_attributes.characteristic_id', 11)
+            ->select('characteristic_attributes.name_ru', 'characteristic_attributes.id')
+            ->groupBy('characteristic_attributes.name_ru', 'characteristic_attributes.id')
+            ->get();
+
+        $cooling = $coolingQuery
+            ->where('characteristic_attributes.characteristic_id', 10)
+            ->select('characteristic_attributes.name_ru', 'characteristic_attributes.id')
+            ->groupBy('characteristic_attributes.name_ru', 'characteristic_attributes.id')
+            ->get();
+
+        $data['manufacturers'] = $manufacturers;
+        $data['manufacturerCountry'] = $manufacturerCountry;
+        $data['brandsCountry'] = $brandsCountry;
+        $data['servicedArea'] = $servicedArea;
+        $data['energyClass'] = $energyClass;
+        $data['cooling'] = $cooling;
+
+        return response()->json($data);
+
+    }
 }
