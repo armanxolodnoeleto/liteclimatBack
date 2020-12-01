@@ -11,7 +11,7 @@ class ProductsController extends Controller
         $projectId = $request->header('projectId');
         $data = [];
 
-        $products = DB::table('products_by_projects')
+        $query = DB::table('products_by_projects')
             ->join('product_to_categories', 'products_by_projects.product_id', '=', 'product_to_categories.product_id')
             ->join('products', 'product_to_categories.product_id', '=', 'products.id')
             ->leftJoin('product_manufacturers', 'products.manufacturer_id', '=', 'product_manufacturers.id')
@@ -23,8 +23,15 @@ class ProductsController extends Controller
             ->where('product_to_categories.category_id', $categoryId)
             ->where('prices.status', 1)
             ->where('prices.price', '!=', 0)
-            ->where('product_series_photos.cover_photo', '=', 1)
-            ->select('products.id', 'products.name as model', 'product_manufacturers.name as brand', 'product_manufacturers.logo as brand_logo', 'product_series.series_name_ru as series_name', 'product_series_photos.folder as series_picture_folder', 'product_series_photos.file_name as series_picture_file_name', 'product_series_photos.file_format as series_picture_format', 'photos.folder as product_picture_folder', 'photos.file_name as product_picture_file_name', 'photos.file_format as product_picture_format', 'prices.price', 'prices.setup_price')
+            ->where('product_series_photos.cover_photo', '=', 1);
+
+
+        if ($request->has('manufacturerCountries')) {
+            $manufacturers = clone $query;
+            $query = $manufacturers->whereIn('product_manufacturers.id', $request->manufacturerCountries);
+        }
+
+        $products = $query->select('products.id', 'products.name as model', 'product_manufacturers.name as brand', 'product_manufacturers.logo as brand_logo', 'product_series.series_name_ru as series_name', 'product_series_photos.folder as series_picture_folder', 'product_series_photos.file_name as series_picture_file_name', 'product_series_photos.file_format as series_picture_format', 'photos.folder as product_picture_folder', 'photos.file_name as product_picture_file_name', 'photos.file_format as product_picture_format', 'prices.price', 'prices.setup_price')
             ->paginate(10);
 
         $productIds = $products->pluck('id');
@@ -32,7 +39,7 @@ class ProductsController extends Controller
         $characteristics = DB::table('product_characteristics')
             ->leftJoin('characteristics', 'product_characteristics.characteristic_id', '=', 'characteristics.id')
             ->leftJoin('characteristic_attributes', 'product_characteristics.attribute_id', '=', 'characteristic_attributes.id')
-            ->whereIn('product_id',$productIds)
+            ->whereIn('product_id', $productIds)
             ->where('product_characteristics.characteristic_id', 3)
             ->select('product_characteristics.product_id as id', 'characteristics.name_ru as characteristic_name_ru','characteristic_attributes.name_ru as characteristic_attribute_name')
             ->get()->toArray();
@@ -108,8 +115,8 @@ class ProductsController extends Controller
             ->leftJoin('characteristic_attributes', 'characteristic_to_categories.characteristic_id', '=', 'characteristic_attributes.characteristic_id')
             ->leftJoin('characteristics', 'characteristic_attributes.characteristic_id', '=', 'characteristics.id')
             ->leftJoin('value_types', 'characteristics.value_type_id', '=', 'value_types.id')
-            ->where('product_categories.project_id', 56)
-            ->where('product_categories.id', 2)
+            ->where('product_categories.project_id', $projectId)
+            ->where('product_categories.id', $categoryId)
             ->select('characteristic_attributes.name_ru', 'characteristic_attributes.id', 'characteristic_attributes.characteristic_id', 'characteristics.name_ru as title', 'value_types.name')
             ->groupBy('characteristic_attributes.name_ru', 'characteristic_attributes.id', 'characteristic_attributes.characteristic_id', 'characteristics.name_ru', 'value_types.name')
             ->get();
@@ -118,6 +125,12 @@ class ProductsController extends Controller
         $data['characteristicAttributes'] = $characteristicAttributes;
 
         return response()->json($data);
+    }
+
+    public function filter(Request $request, $categoryId) {
+        $filterData = $this->getProducts($request, $categoryId);
+
+        return $filterData;
     }
 
 }
