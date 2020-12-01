@@ -127,10 +127,4 @@ class ProductsController extends Controller
         return response()->json($data);
     }
 
-    public function filter(Request $request, $categoryId) {
-        $filterData = $this->getProducts($request, $categoryId);
-
-        return $filterData;
-    }
-
 }
