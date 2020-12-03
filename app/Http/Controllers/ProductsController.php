@@ -175,19 +175,32 @@ class ProductsController extends Controller
             ->groupBy('characteristic_attributes.name_ru', 'product_manufacturers.id', 'product_manufacturers.logo')
             ->get();
 
-        $characteristicAttributes = DB::table('product_categories')
-            ->leftJoin('characteristic_to_categories', 'characteristic_to_categories.category_id', '=', 'product_categories.id')
+//        $characteristicAttributes = DB::table('product_categories')
+        //            ->leftJoin('characteristic_to_categories', 'characteristic_to_categories.category_id', '=', 'product_categories.id')
+        $characteristicAttributes = DB::table('characteristic_to_categories')
             ->leftJoin('characteristic_attributes', 'characteristic_to_categories.characteristic_id', '=', 'characteristic_attributes.characteristic_id')
             ->leftJoin('characteristics', 'characteristic_attributes.characteristic_id', '=', 'characteristics.id')
             ->leftJoin('value_types', 'characteristics.value_type_id', '=', 'value_types.id')
 //            ->where('product_categories.project_id', $projectId)
-            ->where('product_categories.id', $categoryId)
+            ->where('characteristic_to_categories.category_id', $categoryId)
             ->select('characteristic_attributes.name_ru', 'characteristic_attributes.id', 'characteristic_attributes.characteristic_id', 'characteristics.name_ru as title', 'value_types.name')
             ->groupBy('characteristic_attributes.name_ru', 'characteristic_attributes.id', 'characteristic_attributes.characteristic_id', 'characteristics.name_ru', 'value_types.name')
             ->get();
 
+        $textFilters = DB::table('characteristic_to_categories')
+            ->leftJoin('product_characteristics', 'characteristic_to_categories.characteristic_id', '=', 'product_characteristics.characteristic_id')
+            ->leftJoin('characteristics', 'product_characteristics.characteristic_id', '=', 'characteristics.id')
+            ->where('characteristic_to_categories.category_id', $categoryId)
+            ->whereIn('product_characteristics.characteristic_id', [1, 2, 4, 5])
+            ->where('product_characteristics.attribute_id', null)
+            ->select('characteristics.name_ru as title')
+            ->groupBy('characteristics.name_ru')
+            ->get();
+
+
         $data['manufacturerCountries'] = $manufacturerCountries;
         $data['characteristicAttributes'] = $characteristicAttributes;
+        $data['textFilters'] = $textFilters;
 
         return response()->json($data);
     }
