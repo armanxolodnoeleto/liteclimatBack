@@ -22,7 +22,7 @@ class ProductsController extends Controller
         $filterData = $request->except('manufacturerCountries');
         $issetProductCharacteristic = false;
         if ($request->has('checkboxes')) {
-            $query = $query->leftJoin('product_characteristics', 'products.id', '=', 'product_characteristics.product_id');
+            $query = $query->leftJoin('product_characteristics', 'prices.product_id', '=', 'product_characteristics.product_id');
             $issetProductCharacteristic = true;
         }
 
@@ -38,49 +38,35 @@ class ProductsController extends Controller
 
         if ($request->has('fromTo')) {
             $fromTo = $filterData['fromTo'];
-
             if (isset($fromTo['price'])) {
                 $filterArray = $fromTo;
                 unset($filterArray['price']);
                 if (count($filterArray) > 0 && !$issetProductCharacteristic) {
-                    $query = $query->leftJoin('product_characteristics', 'products.id', '=', 'product_characteristics.product_id');
+                    $query = $query->leftJoin('product_characteristics', 'prices.product_id', '=', 'product_characteristics.product_id');
+                }
+                $from = $fromTo['price'][0];
+                $to = $fromTo['price'][1];
+                $column = 'prices.price';
+                $query = $this->getModeFilter($query, $from, $to, $column);
+            }else {
+                if (count($fromTo) > 0 && !$issetProductCharacteristic) {
+                    $query = $query->leftJoin('product_characteristics', 'prices.product_id', '=', 'product_characteristics.product_id');
                 }
             }
 
-            if (isset($fromTo['price'])) {
-                $from = $fromTo['price'][0];
-                $to = $fromTo['price'][1];
-                $table = 'prices.price';
-                $query = $this->getModeFilter($query, $from, $to, $table);
-            }
 
-            if (isset($fromTo['coolingMode'])) {
-                $from = $fromTo['coolingMode'][0];
-                $to = $fromTo['coolingMode'][1];
-                $table = 'product_characteristics.value';
-                $query = $this->getModeFilter($query, $from, $to, $table, 1);
-            }
+            $query = $query->where(function ($q) use ($fromTo) {
+                $column = 'product_characteristics.value';
+                if (isset($fromTo['price'])) {
+                    unset($fromTo['price']);
+                }
+                foreach ($fromTo as $key => $item) {
+                    $from = $item[0];
+                    $to = $item[1];
+                    $this->getModeFilter($q, $from, $to, $column, $key);
+                }
+            });
 
-            if (isset($fromTo['heatingMode'])) {
-                $from = $fromTo['heatingMode'][0];
-                $to = $fromTo['heatingMode'][1];
-                $table = 'product_characteristics.value';
-                $query = $this->getModeFilter($query, $from, $to, $table, 2);
-            }
-
-            if (isset($fromTo['heatingConsumption'])) {
-                $from = $fromTo['heatingConsumption'][0];
-                $to = $fromTo['heatingConsumption'][1];
-                $table = 'product_characteristics.value';
-                $query = $this->getModeFilter($query, $from, $to, $table, 4);
-            }
-
-            if (isset($fromTo['coolingConsumption'])) {
-                $from = $fromTo['coolingConsumption'][0];
-                $to = $fromTo['coolingConsumption'][1];
-                $table = 'product_characteristics.value';
-                $query = $this->getModeFilter($query, $from, $to, $table, 5);
-            }
         }
 
         if ($request->has('checkboxes')) {
@@ -205,13 +191,13 @@ class ProductsController extends Controller
         return response()->json($data);
     }
 
-    private function getModeFilter($query, $from, $to, $table, $characteristicId = 0) {
+    private function getModeFilter($query, $from, $to, $column, $characteristicId = 0) {
         if (is_null($from) && !is_null($to)) {
-            $query = $query->where($table, '<=', $to);
+            $query = $query->where($column, '<=', $to);
         }elseif (!is_null($from) && is_null($to)) {
-            $query = $query->where($table, '>=', $from);
+            $query = $query->where($column, '>=', $from);
         }elseif (!is_null($from) && !is_null($to)) {
-            $query = $query->whereBetween($table, [$from, $to]);
+            $query = $query->whereBetween($column, [$from, $to]);
         }
         if ($characteristicId) {
             $query = $query->where('product_characteristics.characteristic_id', '=', $characteristicId);
