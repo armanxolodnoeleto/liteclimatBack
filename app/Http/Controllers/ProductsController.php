@@ -193,8 +193,8 @@ class ProductsController extends Controller
             ->where('characteristic_to_categories.category_id', $categoryId)
             ->whereIn('product_characteristics.characteristic_id', [1, 2, 4, 5])
             ->where('product_characteristics.attribute_id', null)
-            ->select('characteristics.name_ru as title')
-            ->groupBy('characteristics.name_ru')
+            ->select('characteristics.name_ru as title', 'characteristics.id')
+            ->groupBy('characteristics.name_ru', 'characteristics.id')
             ->get();
 
 
