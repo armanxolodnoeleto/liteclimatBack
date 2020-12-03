@@ -20,8 +20,10 @@ class ProductsController extends Controller
             ->leftJoin('prices', 'products.id', '=', 'prices.product_id');
 
         $filterData = $request->except('manufacturerCountries');
+        $issetProductCharacteristic = false;
         if ($request->has('checkboxes')) {
             $query = $query->leftJoin('product_characteristics', 'products.id', '=', 'product_characteristics.product_id');
+            $issetProductCharacteristic = true;
         }
 
         $query = $query->where('prices.project_id', $projectId)
@@ -35,28 +37,67 @@ class ProductsController extends Controller
         }
 
         if ($request->has('fromTo')) {
-            if (isset($filterData['fromTo']['price'])) {
-                $from = $filterData['fromTo']['price'][0];
-                $to = $filterData['fromTo']['price'][1];
-                $query = $query->whereBetween('prices.price', [$from, $to]);
+            $fromTo = $filterData['fromTo'];
+
+            if (isset($fromTo['price'])) {
+                $filterArray = $fromTo;
+                unset($filterArray['price']);
+                if (count($filterArray) > 0 && !$issetProductCharacteristic) {
+                    $query = $query->leftJoin('product_characteristics', 'products.id', '=', 'product_characteristics.product_id');
+                }
+            }
+
+            if (isset($fromTo['price'])) {
+                $from = $fromTo['price'][0];
+                $to = $fromTo['price'][1];
+                $table = 'prices.price';
+                $query = $this->getModeFilter($query, $from, $to, $table);
+            }
+
+            if (isset($fromTo['coolingMode'])) {
+                $from = $fromTo['coolingMode'][0];
+                $to = $fromTo['coolingMode'][1];
+                $table = 'product_characteristics.value';
+                $query = $this->getModeFilter($query, $from, $to, $table, 1);
+            }
+
+            if (isset($fromTo['heatingMode'])) {
+                $from = $fromTo['heatingMode'][0];
+                $to = $fromTo['heatingMode'][1];
+                $table = 'product_characteristics.value';
+                $query = $this->getModeFilter($query, $from, $to, $table, 2);
+            }
+
+            if (isset($fromTo['heatingConsumption'])) {
+                $from = $fromTo['heatingConsumption'][0];
+                $to = $fromTo['heatingConsumption'][1];
+                $table = 'product_characteristics.value';
+                $query = $this->getModeFilter($query, $from, $to, $table, 4);
+            }
+
+            if (isset($fromTo['coolingConsumption'])) {
+                $from = $fromTo['coolingConsumption'][0];
+                $to = $fromTo['coolingConsumption'][1];
+                $table = 'product_characteristics.value';
+                $query = $this->getModeFilter($query, $from, $to, $table, 5);
             }
         }
 
         if ($request->has('checkboxes')) {
             $checkboxes = $filterData['checkboxes'];
-            $query = $query->where(function ($q) use ($checkboxes) {
-                foreach ($checkboxes as $key => $item) {
-                    $q->orWhere('product_characteristics.characteristic_id', $key)->whereIn('product_characteristics.attribute_id', $item);
-                }
-            });
+            if (!empty($checkboxes)) {
+                $query = $query->where(function ($q) use ($checkboxes) {
+                    foreach ($checkboxes as $key => $item) {
+                        $q->orWhere('product_characteristics.characteristic_id', $key)->whereIn('product_characteristics.attribute_id', $item);
+                    }
+                });
+            }
         }
 
         $products = $query->select('products.id', 'products.name as model', 'product_manufacturers.name as brand', 'product_manufacturers.logo as brand_logo', 'product_series.series_name_ru as series_name', 'product_series_photos.folder as series_picture_folder', 'product_series_photos.file_name as series_picture_file_name','product_series_photos.file_format as series_picture_format','photos.folder as product_picture_folder','photos.file_name as product_picture_file_name', 'photos.file_format as product_picture_format', 'prices.price', 'prices.setup_price')
             ->distinct()
             ->paginate(10);
 //            ->groupBy('products.id', 'products.name', 'product_manufacturers.name', 'product_manufacturers.logo', 'product_series.series_name_ru', 'product_series_photos.folder', 'product_series_photos.file_name','product_series_photos.file_format','photos.folder','photos.file_name', 'photos.file_format', 'prices.price', 'prices.setup_price');
-
-//        return $products->paginate(10);
 
         $productIds = $products->pluck('id');
 
@@ -149,6 +190,20 @@ class ProductsController extends Controller
         $data['characteristicAttributes'] = $characteristicAttributes;
 
         return response()->json($data);
+    }
+
+    private function getModeFilter($query, $from, $to, $table, $characteristicId = 0) {
+        if (is_null($from) && !is_null($to)) {
+            $query = $query->where($table, '<=', $to);
+        }elseif (!is_null($from) && is_null($to)) {
+            $query = $query->where($table, '>=', $from);
+        }elseif (!is_null($from) && !is_null($to)) {
+            $query = $query->whereBetween($table, [$from, $to]);
+        }
+        if ($characteristicId) {
+            $query = $query->where('product_characteristics.characteristic_id', '=', $characteristicId);
+        }
+        return $query;
     }
 
 }
