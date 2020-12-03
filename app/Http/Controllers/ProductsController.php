@@ -34,6 +34,14 @@ class ProductsController extends Controller
             $query = $query->whereIn('product_manufacturers.id', $request->manufacturerCountries);
         }
 
+        if ($request->has('fromTo')) {
+            if (isset($filterData['fromTo']['price'])) {
+                $from = $filterData['fromTo']['price'][0];
+                $to = $filterData['fromTo']['price'][1];
+                $query = $query->whereBetween('prices.price', [$from, $to]);
+            }
+        }
+
         if ($request->has('checkboxes')) {
             $checkboxes = $filterData['checkboxes'];
             $query = $query->where(function ($q) use ($checkboxes) {
@@ -131,7 +139,7 @@ class ProductsController extends Controller
             ->leftJoin('characteristic_attributes', 'characteristic_to_categories.characteristic_id', '=', 'characteristic_attributes.characteristic_id')
             ->leftJoin('characteristics', 'characteristic_attributes.characteristic_id', '=', 'characteristics.id')
             ->leftJoin('value_types', 'characteristics.value_type_id', '=', 'value_types.id')
-            ->where('product_categories.project_id', $projectId)
+//            ->where('product_categories.project_id', $projectId)
             ->where('product_categories.id', $categoryId)
             ->select('characteristic_attributes.name_ru', 'characteristic_attributes.id', 'characteristic_attributes.characteristic_id', 'characteristics.name_ru as title', 'value_types.name')
             ->groupBy('characteristic_attributes.name_ru', 'characteristic_attributes.id', 'characteristic_attributes.characteristic_id', 'characteristics.name_ru', 'value_types.name')
