@@ -22,3 +22,4 @@ Route::get('getCategories', 'CategoriesController@getCategories');
 Route::post('getProducts/{categoryId?}', 'ProductsController@getProducts');
 Route::get('getProduct/{productId}', 'ProductsController@getProduct');
 Route::get('getFilterData/{categoryId?}', 'ProductsController@getFilterData');
+Route::post('searchProduct', 'ProductsController@searchProduct');

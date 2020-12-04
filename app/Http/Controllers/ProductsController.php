@@ -191,6 +191,35 @@ class ProductsController extends Controller
         return response()->json($data);
     }
 
+    public function searchProduct(Request $request) {
+        $projectId = $request->header('projectId');
+        $searchBy = $request->search;
+
+        $searchableColumns = ['products.name', 'product_manufacturers.name', 'product_series.series_name_ru'];
+
+        if ($searchBy) {
+            $searchResponse = DB::table('prices')
+                ->leftJoin('products', 'prices.product_id', '=', 'products.id')
+                ->leftJoin('product_manufacturers', 'products.manufacturer_id', '=', 'product_manufacturers.id')
+                ->leftJoin('product_series', 'products.series_id', '=', 'product_series.id')
+                ->leftJoin('product_series_photos', 'product_series.id', '=', 'product_series_photos.series_id')
+                ->leftJoin('photos', 'products.id', '=', 'photos.product_id')
+                ->where('prices.project_id', $projectId)
+                ->where('prices.status', 1)
+                ->where('product_series_photos.cover_photo',1)
+                ->where('prices.price', '!=', 0)
+                ->where(function($q) use ($searchableColumns, $searchBy) {
+                    foreach ($searchableColumns as $searchableColumn) {
+                        $q->orWhere($searchableColumn, 'LIKE', "%{$searchBy}%");
+                    }
+                })
+                ->select('products.id', 'products.name as model', 'product_manufacturers.name as brand', 'product_manufacturers.logo as brand_logo', 'product_series.series_name_ru as series_name', 'product_series_photos.folder as series_picture_folder', 'product_series_photos.file_name as series_picture_file_name','product_series_photos.file_format as series_picture_format','photos.folder as product_picture_folder','photos.file_name as product_picture_file_name', 'photos.file_format as product_picture_format', 'prices.price')
+                ->get();
+            return $searchResponse;
+        }
+        return [];
+    }
+
     private function getModeFilter($query, $from, $to, $column, $characteristicId = 0) {
         if (is_null($from) && !is_null($to)) {
             $query = $query->where($column, '<=', $to);
