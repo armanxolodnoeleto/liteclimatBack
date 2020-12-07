@@ -150,9 +150,28 @@ class ProductsController extends Controller
     public function getFilterData(Request $request, $categoryId) {
         $projectId = $request->header('projectId');
         $data = [];
-        $manufacturerCountries = DB::table('products_by_projects')
-            ->leftJoin('product_to_categories', 'products_by_projects.product_id', '=', 'product_to_categories.product_id')
-            ->leftJoin('products', 'products_by_projects.product_id', '=', 'products.id')
+//        $manufacturerCountries = DB::table('products_by_projects')
+//            ->leftJoin('product_to_categories', 'products_by_projects.product_id', '=', 'product_to_categories.product_id')
+//            ->leftJoin('products', 'product_to_categories.product_id', '=', 'products.id')
+//            ->leftJoin('product_manufacturers', 'products.manufacturer_id', '=', 'product_manufacturers.id')
+//
+//            ->leftJoin('product_series', 'products.series_id', '=', 'product_series.id')
+//            ->leftJoin('product_series_photos', 'product_series.id', '=', 'product_series_photos.series_id')
+//
+//            ->leftJoin('product_characteristics', 'products.id', '=', 'product_characteristics.product_id')
+//            ->leftJoin('characteristic_attributes', 'characteristic_attributes.characteristic_id', '=', 'product_characteristics.characteristic_id')
+//
+//            ->where('products_by_projects.project_id', $projectId)
+//            ->where('product_to_categories.category_id', $categoryId)
+//            ->where('product_series_photos.cover_photo', '=', 1)
+//            ->where('characteristic_attributes.characteristic_id', 14)
+//            ->where('product_manufacturers.id', '=', 3)
+//            ->select('characteristic_attributes.name_ru', DB::raw('COUNT(products.id) as count'), 'product_manufacturers.logo', 'product_manufacturers.id')
+//            ->groupBy('characteristic_attributes.name_ru', 'product_manufacturers.id', 'product_manufacturers.logo')
+//            ->get();
+
+        $manufacturerCountries = DB::table('prices')
+            ->join('products', 'prices.product_id', '=', 'products.id')
             ->leftJoin('product_manufacturers', 'products.manufacturer_id', '=', 'product_manufacturers.id')
 
             ->leftJoin('product_series', 'products.series_id', '=', 'product_series.id')
@@ -161,14 +180,15 @@ class ProductsController extends Controller
             ->leftJoin('product_characteristics', 'products.id', '=', 'product_characteristics.product_id')
             ->leftJoin('characteristic_attributes', 'characteristic_attributes.characteristic_id', '=', 'product_characteristics.characteristic_id')
 
-            ->where('products_by_projects.project_id', $projectId)
-            ->where('product_to_categories.category_id', $categoryId)
+            ->where('prices.project_id', $projectId)
+            ->where('product_series.category_id', $categoryId)
             ->where('product_series_photos.cover_photo', '=', 1)
             ->where('characteristic_attributes.characteristic_id', 14)
+            ->where('prices.price', '!=', 0)
+            ->where('prices.status', 1)
+            ->where('product_series_photos.cover_photo', '=', 1)
             ->select('characteristic_attributes.name_ru', DB::raw('COUNT(products.id) as count'), 'product_manufacturers.logo', 'product_manufacturers.id')
             ->groupBy('characteristic_attributes.name_ru', 'product_manufacturers.id', 'product_manufacturers.logo')
-
-//            return $manufacturerCountries->toSql();
             ->get();
 
 //        $characteristicAttributes = DB::table('product_categories')
