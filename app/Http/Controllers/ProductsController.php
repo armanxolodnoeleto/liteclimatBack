@@ -10,14 +10,16 @@ class ProductsController extends Controller
     public function getProducts(Request $request, $categoryId) {
         $projectId = $request->header('projectId');
         $data = [];
-        $query = DB::table('products_by_projects')
-            ->leftJoin('product_to_categories', 'products_by_projects.product_id', '=', 'product_to_categories.product_id')
+//        $query = DB::table('products_by_projects')
+        $query = DB::table('prices')
+//            ->leftJoin('product_to_categories', 'products_by_projects.product_id', '=', 'product_to_categories.product_id')
+            ->leftJoin('product_to_categories', 'prices.product_id', '=', 'product_to_categories.product_id')
             ->leftJoin('products', 'product_to_categories.product_id', '=', 'products.id')
             ->leftJoin('product_manufacturers', 'products.manufacturer_id', '=', 'product_manufacturers.id')
             ->leftJoin('product_series', 'products.series_id', '=', 'product_series.id')
             ->leftJoin('product_series_photos', 'product_series.id', '=', 'product_series_photos.series_id')
-            ->leftJoin('photos', 'products.id', '=', 'photos.product_id')
-            ->leftJoin('prices', 'products.id', '=', 'prices.product_id');
+            ->leftJoin('photos', 'products.id', '=', 'photos.product_id');
+//            ->leftJoin('prices', 'products.id', '=', 'prices.product_id');
 
         $filterData = $request->except('manufacturerCountries');
         $issetProductCharacteristic = false;
@@ -74,7 +76,7 @@ class ProductsController extends Controller
             if (!empty($checkboxes)) {
                 $query = $query->where(function ($q) use ($checkboxes) {
                     foreach ($checkboxes as $key => $item) {
-                        $q->orWhere('product_characteristics.characteristic_id', $key)->whereIn('product_characteristics.attribute_id', $item);
+                        $q->where('product_characteristics.characteristic_id', $key)->whereIn('product_characteristics.attribute_id', $item);
                     }
                 });
             }
@@ -152,13 +154,21 @@ class ProductsController extends Controller
             ->leftJoin('product_to_categories', 'products_by_projects.product_id', '=', 'product_to_categories.product_id')
             ->leftJoin('products', 'products_by_projects.product_id', '=', 'products.id')
             ->leftJoin('product_manufacturers', 'products.manufacturer_id', '=', 'product_manufacturers.id')
+
+            ->leftJoin('product_series', 'products.series_id', '=', 'product_series.id')
+            ->leftJoin('product_series_photos', 'product_series.id', '=', 'product_series_photos.series_id')
+
             ->leftJoin('product_characteristics', 'products.id', '=', 'product_characteristics.product_id')
             ->leftJoin('characteristic_attributes', 'characteristic_attributes.characteristic_id', '=', 'product_characteristics.characteristic_id')
+
             ->where('products_by_projects.project_id', $projectId)
             ->where('product_to_categories.category_id', $categoryId)
+            ->where('product_series_photos.cover_photo', '=', 1)
             ->where('characteristic_attributes.characteristic_id', 14)
-            ->select('characteristic_attributes.name_ru', DB::raw('COUNT(*) as count'), 'product_manufacturers.logo', 'product_manufacturers.id')
+            ->select('characteristic_attributes.name_ru', DB::raw('COUNT(products.id) as count'), 'product_manufacturers.logo', 'product_manufacturers.id')
             ->groupBy('characteristic_attributes.name_ru', 'product_manufacturers.id', 'product_manufacturers.logo')
+
+//            return $manufacturerCountries->toSql();
             ->get();
 
 //        $characteristicAttributes = DB::table('product_categories')
