@@ -228,7 +228,10 @@ class ProductsController extends Controller
                 })
                 ->select('products.id', 'products.name as model', 'product_manufacturers.name as brand', 'product_manufacturers.logo as brand_logo', 'product_series.series_name_ru as series_name', 'product_series_photos.folder as series_picture_folder', 'product_series_photos.file_name as series_picture_file_name','product_series_photos.file_format as series_picture_format','photos.folder as product_picture_folder','photos.file_name as product_picture_file_name', 'photos.file_format as product_picture_format', 'prices.price')
                 ->paginate(15);
-            return $searchResponse;
+
+            $data['searchResponse'] = $searchResponse->items();
+            $data['total'] = $searchResponse->total();
+            return $data;
         }
         return [];
     }
