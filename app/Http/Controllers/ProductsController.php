@@ -170,25 +170,50 @@ class ProductsController extends Controller
 //            ->groupBy('characteristic_attributes.name_ru', 'product_manufacturers.id', 'product_manufacturers.logo')
 //            ->get();
 
-        $manufacturerCountries = DB::table('prices')
-            ->join('products', 'prices.product_id', '=', 'products.id')
-            ->leftJoin('product_manufacturers', 'products.manufacturer_id', '=', 'product_manufacturers.id')
+//        $manufacturerCountries = DB::table('prices')
+//            ->join('products', 'prices.product_id', '=', 'products.id')
+//            ->leftJoin('product_manufacturers', 'products.manufacturer_id', '=', 'product_manufacturers.id')
+//
+//            ->leftJoin('product_series', 'products.series_id', '=', 'product_series.id')
+//            ->leftJoin('product_series_photos', 'product_series.id', '=', 'product_series_photos.series_id')
+//
+//            ->leftJoin('product_characteristics', 'products.id', '=', 'product_characteristics.product_id')
+//            ->leftJoin('characteristic_attributes', 'product_characteristics.characteristic_id', '=', 'characteristic_attributes.characteristic_id')
+//
+//            ->where('prices.project_id', $projectId)
+//            ->where('product_series.category_id', $categoryId)
+//            ->where('product_series_photos.cover_photo', '=', 1)
+//            ->where('characteristic_attributes.characteristic_id', 14)
+//            ->where('prices.price', '!=', 0)
+//            ->where('prices.status', 1)
+//            ->where('product_series_photos.cover_photo', '=', 1)
+//            ->select('characteristic_attributes.name_ru', DB::raw('COUNT(products.id) as count'), 'product_manufacturers.logo', 'product_manufacturers.id')
+//            ->groupBy('characteristic_attributes.name_ru', 'product_manufacturers.id', 'product_manufacturers.logo')
+//            ->get();
 
+
+        $manufacturerCountries = DB::table('prices')
+            ->leftJoin('product_to_categories', 'prices.product_id', '=', 'product_to_categories.product_id')
+            ->leftJoin('products', 'product_to_categories.product_id', '=', 'products.id')
+            ->leftJoin('product_manufacturers', 'products.manufacturer_id', '=', 'product_manufacturers.id')
             ->leftJoin('product_series', 'products.series_id', '=', 'product_series.id')
             ->leftJoin('product_series_photos', 'product_series.id', '=', 'product_series_photos.series_id')
 
-            ->leftJoin('product_characteristics', 'products.id', '=', 'product_characteristics.product_id')
-            ->leftJoin('characteristic_attributes', 'characteristic_attributes.characteristic_id', '=', 'product_characteristics.characteristic_id')
+            ->leftJoin('product_characteristics', 'prices.product_id', '=', 'product_characteristics.product_id')
+            ->leftJoin('characteristic_attributes', 'product_characteristics.characteristic_id', '=', 'characteristic_attributes.characteristic_id')
 
-            ->where('prices.project_id', $projectId)
-            ->where('product_series.category_id', $categoryId)
-            ->where('product_series_photos.cover_photo', '=', 1)
             ->where('characteristic_attributes.characteristic_id', 14)
-            ->where('prices.price', '!=', 0)
+            ->where('prices.project_id', $projectId)
+            ->where('product_to_categories.category_id', $categoryId)
             ->where('prices.status', 1)
             ->where('product_series_photos.cover_photo', '=', 1)
-            ->select('characteristic_attributes.name_ru', DB::raw('COUNT(products.id) as count'), 'product_manufacturers.logo', 'product_manufacturers.id')
+            ->where('prices.price', '!=', 0)
+
+            ->select('characteristic_attributes.name_ru', DB::raw('COUNT(prices.product_id) as count'), 'product_manufacturers.logo', 'product_manufacturers.id')
             ->groupBy('characteristic_attributes.name_ru', 'product_manufacturers.id', 'product_manufacturers.logo')
+//            ;
+//        return $manufacturerCountries->toSql();
+//            ->distinct()
             ->get();
 
 //        $characteristicAttributes = DB::table('product_categories')
