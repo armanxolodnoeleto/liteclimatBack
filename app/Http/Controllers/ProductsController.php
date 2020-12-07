@@ -69,7 +69,6 @@ class ProductsController extends Controller
                     $this->getModeFilter($q, $from, $to, $column, $key);
                 }
             });
-
         }
 
         if ($request->has('checkboxes')) {
@@ -83,9 +82,14 @@ class ProductsController extends Controller
             }
         }
 
-        $products = $query->select('products.id', 'products.name as model', 'product_manufacturers.name as brand', 'product_manufacturers.logo as brand_logo', 'product_series.series_name_ru as series_name', 'product_series_photos.folder as series_picture_folder', 'product_series_photos.file_name as series_picture_file_name','product_series_photos.file_format as series_picture_format','photos.folder as product_picture_folder','photos.file_name as product_picture_file_name', 'photos.file_format as product_picture_format', 'prices.price', 'prices.setup_price')
-            ->distinct()
-            ->paginate(10);
+        $query = $query->select('products.id', 'products.name as model', 'product_manufacturers.name as brand', 'product_manufacturers.logo as brand_logo', 'product_series.series_name_ru as series_name', 'product_series_photos.folder as series_picture_folder', 'product_series_photos.file_name as series_picture_file_name','product_series_photos.file_format as series_picture_format','photos.folder as product_picture_folder','photos.file_name as product_picture_file_name', 'photos.file_format as product_picture_format', 'prices.price', 'prices.setup_price')
+            ->distinct();
+
+        if ($request->has('orderBy')) {
+            $query->orderBy('prices.price', $request->orderBy);
+        }
+
+        $products = $query->paginate(10);
 
         $productIds = $products->pluck('id');
 
@@ -223,7 +227,7 @@ class ProductsController extends Controller
                     }
                 })
                 ->select('products.id', 'products.name as model', 'product_manufacturers.name as brand', 'product_manufacturers.logo as brand_logo', 'product_series.series_name_ru as series_name', 'product_series_photos.folder as series_picture_folder', 'product_series_photos.file_name as series_picture_file_name','product_series_photos.file_format as series_picture_format','photos.folder as product_picture_folder','photos.file_name as product_picture_file_name', 'photos.file_format as product_picture_format', 'prices.price')
-                ->get();
+                ->paginate(15);
             return $searchResponse;
         }
         return [];
