@@ -232,7 +232,7 @@ class ProductsController extends Controller
 
             $data['searchResponse'] = $searchResponse->items();
             $data['total'] = $searchResponse->total();
-            return $data;
+            return response()->json($data);
         }
         return [];
     }
