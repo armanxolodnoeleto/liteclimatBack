@@ -34,6 +34,7 @@ class ProductsController extends Controller
         if ($request->has('manufacturerCountries')) {
             if (!$issetProductCharacteristic) {
                 $query = $query->leftJoin('product_characteristics', 'prices.product_id', '=', 'product_characteristics.product_id');
+                $issetProductCharacteristic = true;
             }
             $query = $query->whereIn('product_manufacturers.id', $request->manufacturerCountries);
             $query = $query->where('product_characteristics.characteristic_id', '=', 14);
