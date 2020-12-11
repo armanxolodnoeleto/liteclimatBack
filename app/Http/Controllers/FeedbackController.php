@@ -11,7 +11,7 @@ use App\Services\SendMailSmtpClass;
 class FeedbackController extends Controller
 {
     public function checkout(Request $request) {
-        $checkoutData = $request->except('products');
+        $checkoutData = $request->except(['products', '/api/checkout']);
         $projectId = $request->header('projectId');
         $validator = Validator::make($checkoutData, [
             'name' => 'required|max:255',
