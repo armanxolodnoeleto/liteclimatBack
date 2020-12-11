@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
+use App\Services\SendMailSmtpClass;
 
 class FeedbackController extends Controller
 {
@@ -44,11 +45,10 @@ class FeedbackController extends Controller
                     ->first();
                 $productsInfo[$productId]->count = $count;
             }
-            $subject = "Заявка с корзины";
             $data['checkoutData'] = $checkoutData;
             $data['productsInfo'] = $productsInfo;
 
-            $this->sendMail($data, $subject, $projectId);
+            $this->sendMail($data, $projectId);
 
             return response()->json('success');
         } catch (\Exception $exception) {
@@ -56,15 +56,37 @@ class FeedbackController extends Controller
         }
     }
 
-    private function sendMail($data, $subject, $projectId) {
+    private function sendMail($data, $projectId) {
+        $theme = 'Заявка с корзины (Купить в 1 клик)';
         if ($projectId == 59) {
-            $email = 'zakaz@laitklimat.ru';
+            $project = 'LaitKlimat.ru';
+            $login = 'zakaz@laitklimat.ru';
+            $password = 'Zpass1568';
+            $host = 'ssl://smtp.yandex.ru';
         }else {
-            $email = 'zakaz@xolodnoeleto.ru';
+            $project = 'Xolodnoeleto.ru';
+            $login = 'zakaz@xolodnoeleto.ru';
+            $password = 'Zpass82827';
+            $host = 'ssl://smtp.yandex.ru';
         }
-        Mail::send('emails.order', ['data' => $data], function($message) use ($email, $subject) {
-            $message->to($email)->subject($subject);
-            $message->from('zakup@xolodnoeleto.ru');
-        });
+
+        $message = view('emails.order', compact('data', 'projectId'))->render();
+        $sendedMail = $this->sendMailByProject($login, $password, $login, $theme, $message, $host, $project);
+
+        if ($sendedMail) {
+            $messageForClient = view('emails.orderClient', compact('data', 'projectId'))->render();
+            $this->sendMailByProject($login, $password, $data['checkoutData']['email'], $theme, $messageForClient, $host, $project);
+        }
+    }
+
+    private function sendMailByProject($login, $password, $email, $theme, $message, $host, $project) {
+        $mailSMTP = new SendMailSmtpClass($login, $password, $host, 'Клиент', 465);
+        $headers= "MIME-Version: 1.0\r\n";
+        $headers .= "Content-type: text/html; charset=utf-8\r\n";
+        $headers .= "From: ". $project ." <". $login .">\r\n";
+        $headers .= "To: <" . $email.">\r\n";
+        $result =  $mailSMTP->send($email, $theme, $message, $headers);
+
+        return $result;
     }
 }

@@ -8,7 +8,7 @@
 </head>
 <body>
     <p style="font-weight: bold">Информация о клиенте:</p>
-    <table>
+    <table align="center">
         <thead>
             <tr>
                 <th>Имя</th>
@@ -36,7 +36,7 @@
     </table>
 
     <p style="font-weight: bold">Информация заказа:</p>
-    <table>
+    <table align="center">
         <thead>
             <tr>
                 <th>ID</th>
