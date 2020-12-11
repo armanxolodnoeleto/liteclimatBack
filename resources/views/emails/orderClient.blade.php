@@ -36,7 +36,7 @@
     @if ($projectId == 59)
         <p style="margin-top: 60px;"><img src="http://projects-backend.ru/public/uploads/logos/light_climat.png" style="width:530px;"></p>
     @endif
-    <p>По всем вопросам<br>E-mail: {{ $projectId == 59 ? 'zakaz@laitklimat.ru' : 'zakaz@xolodnoeleto.ru' }}<br>Телефон: +7[499] 288-71-87</p>
+    <p>По всем вопросам<br>E-mail: {{ $projectId == 59 ? 'zakaz@laitklimat.ru' : 'zakaz@xolodnoeleto.ru' }}<br>Телефон: {{ $projectId == 59 ? '+7[495] 668-65-11' : '+7 (499) 286-89-05' }}</p>
 </div>
 </body>
 </html>
