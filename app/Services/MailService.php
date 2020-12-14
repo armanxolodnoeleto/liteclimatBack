@@ -10,7 +10,7 @@ class MailService {
 
     public function __construct($projectId) {
         $this->projectId = $projectId;
-        if ($projectId == 59) {
+        if ($projectId == config('projects.lk')) {
             $this->project = 'LaitKlimat.ru';
             $this->login = 'zakaz@laitklimat.ru';
             $this->password = 'Zpass1568';

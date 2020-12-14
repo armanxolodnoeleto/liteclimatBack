@@ -1,7 +1,7 @@
 <html>
 <body>
 <div style="width:90%;margin:0 auto;padding-bottom: 50px;">
-    @if ($projectId == 59)
+    @if ($projectId == config('projects.lk'))
         <a href="https://laitklimat.ru"><img src="http://projects-backend.ru/public/uploads/logos/laitklimat.jpg"></a>
     @else
         <a href="https://xolodnoeleto.ru"><img src="http://projects-backend.ru/public/uploads/logos/xolod.png"></a>
@@ -33,10 +33,10 @@
             <td style="padding: 12px;border-top: 1px solid #c7c7c7;"><b>{{ $productSum }}</b></td>
         </tr>
     </table>
-    @if ($projectId == 59)
+    @if ($projectId == config('projects.lk'))
         <p style="margin-top: 60px;"><img src="http://projects-backend.ru/public/uploads/logos/light_climat.png" style="width:530px;"></p>
     @endif
-    <p>По всем вопросам<br>E-mail: {{ $projectId == 59 ? 'zakaz@laitklimat.ru' : 'zakaz@xolodnoeleto.ru' }}<br>Телефон: {{ $projectId == 59 ? '+7[495] 668-65-11' : '+7 (499) 286-89-05' }}</p>
+    <p>По всем вопросам<br>E-mail: {{ $projectId == config('projects.lk') ? 'zakaz@laitklimat.ru' : 'zakaz@xolodnoeleto.ru' }}<br>Телефон: {{ $projectId == config('projects.lk') ? '+7[495] 668-65-11' : '+7 (499) 286-89-05' }}</p>
 </div>
 </body>
 </html>

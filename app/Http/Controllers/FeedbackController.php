@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Services\MailService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
 
@@ -62,10 +61,10 @@ class FeedbackController extends Controller
     }
 
     public function oneClickOrder(Request $request) {
-        $oneClickOrderData = $request->all();
+        $orderData = $request->all();
         $projectId = $request->header('projectId');
 
-        $validator = Validator::make($oneClickOrderData, [
+        $validator = Validator::make($orderData, [
             'name' => 'required|max:255',
             'phone' => 'required|max:255',
         ]);
@@ -74,9 +73,16 @@ class FeedbackController extends Controller
             return response()->json(['errors'=>$validator->errors()]);
         }
 
-        $theme = 'Заявка с корзины (Купить в 1 клик)';
+        if ($projectId == config('projects.lk')) {
+            $theme = 'Заявка с корзины (Купить в 1 клик)';
+            $view = 'emails.oneClickOrder';
+        }else {
+            $theme = 'Заказ обратного звонка';
+            $view = 'emails.orderCallback';
+        }
+
         $mailSender = new MailService($projectId);
-        $mailSender->sendMail($oneClickOrderData, $theme, 'emails.oneClickOrder');
+        $mailSender->sendMail($orderData, $theme, $view);
 
         return response()->json('success');
     }
