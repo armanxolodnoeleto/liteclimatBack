@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\MailService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
-use App\Services\SendMailSmtpClass;
 
 class FeedbackController extends Controller
 {
@@ -47,8 +47,13 @@ class FeedbackController extends Controller
             }
             $data['checkoutData'] = $checkoutData;
             $data['productsInfo'] = $productsInfo;
+            $theme = 'Заявка с корзины';
 
-            $this->sendMail($data, $projectId);
+            $mailSender = new MailService($projectId);
+            $mailSender->sendMail($data, $theme, 'emails.order');
+
+            $email = $data['checkoutData']['email'];
+            $mailSender->sendMailToClient($email, $data, $theme, 'emails.orderClient');
 
             return response()->json('success');
         } catch (\Exception $exception) {
@@ -56,37 +61,57 @@ class FeedbackController extends Controller
         }
     }
 
-    private function sendMail($data, $projectId) {
+    public function oneClickOrder(Request $request) {
+        $oneClickOrderData = $request->all();
+        $projectId = $request->header('projectId');
+
+        $validator = Validator::make($oneClickOrderData, [
+            'name' => 'required|max:255',
+            'phone' => 'required|max:255',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors'=>$validator->errors()]);
+        }
+
         $theme = 'Заявка с корзины (Купить в 1 клик)';
-        if ($projectId == 59) {
-            $project = 'LaitKlimat.ru';
-            $login = 'zakaz@laitklimat.ru';
-            $password = 'Zpass1568';
-            $host = 'ssl://smtp.yandex.ru';
-        }else {
-            $project = 'Xolodnoeleto.ru';
-            $login = 'zakaz@xolodnoeleto.ru';
-            $password = 'Zpass82827';
-            $host = 'ssl://smtp.yandex.ru';
-        }
-
-        $message = view('emails.order', compact('data', 'projectId'))->render();
-        $sendedMail = $this->sendMailByProject($login, $password, $login, $theme, $message, $host, $project);
-
-        if ($sendedMail) {
-            $messageForClient = view('emails.orderClient', compact('data', 'projectId'))->render();
-            $this->sendMailByProject($login, $password, $data['checkoutData']['email'], $theme, $messageForClient, $host, $project);
-        }
+        $mailSender = new MailService($projectId);
+        $mailSender->sendMail($oneClickOrderData, $theme, 'emails.orderOneClick');
+        
+        return response()->json('success');
     }
 
-    private function sendMailByProject($login, $password, $email, $theme, $message, $host, $project) {
-        $mailSMTP = new SendMailSmtpClass($login, $password, $host, 'Клиент', 465);
-        $headers= "MIME-Version: 1.0\r\n";
-        $headers .= "Content-type: text/html; charset=utf-8\r\n";
-        $headers .= "From: ". $project ." <". $login .">\r\n";
-        $headers .= "To: <" . $email.">\r\n";
-        $result =  $mailSMTP->send($email, $theme, $message, $headers);
 
-        return $result;
-    }
+//    private function sendMail($data, $projectId, $theme, $view) {
+//        if ($projectId == 59) {
+//            $project = 'LaitKlimat.ru';
+//            $login = 'zakaz@laitklimat.ru';
+//            $password = 'Zpass1568';
+//            $host = 'ssl://smtp.yandex.ru';
+//        }else {
+//            $project = 'Xolodnoeleto.ru';
+//            $login = 'zakaz@xolodnoeleto.ru';
+//            $password = 'Zpass82827';
+//            $host = 'ssl://smtp.yandex.ru';
+//        }
+//
+//        $message = view($view, compact('data', 'projectId'))->render();
+//        $sendedMail = $this->sendMailByProject($login, $password, $login, $theme, $message, $host, $project);
+//
+//        if ($sendedMail) {
+//            $messageForClient = view('emails.orderClient', compact('data', 'projectId'))->render();
+//            $this->sendMailByProject($login, $password, $data['checkoutData']['email'], $theme, $messageForClient, $host, $project);
+//        }
+//    }
+//
+//    private function sendMailByProject($login, $password, $email, $theme, $message, $host, $project) {
+//        $mailSMTP = new SendMailSmtpClass($login, $password, $host, 'Клиент', 465);
+//        $headers= "MIME-Version: 1.0\r\n";
+//        $headers .= "Content-type: text/html; charset=utf-8\r\n";
+//        $headers .= "From: ". $project ." <". $login .">\r\n";
+//        $headers .= "To: <" . $email.">\r\n";
+//        $result =  $mailSMTP->send($email, $theme, $message, $headers);
+//
+//        return $result;
+//    }
 }
