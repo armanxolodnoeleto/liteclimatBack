@@ -76,7 +76,7 @@ class FeedbackController extends Controller
 
         $theme = 'Заявка с корзины (Купить в 1 клик)';
         $mailSender = new MailService($projectId);
-        $mailSender->sendMail($oneClickOrderData, $theme, 'emails.orderOneClick');
+        $mailSender->sendMail($oneClickOrderData, $theme, 'emails.oneClickOrder');
 
         return response()->json('success');
     }
