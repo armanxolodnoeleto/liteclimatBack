@@ -16,7 +16,7 @@
         </tr>
         </thead>
         <tbody>
-        <tr>
+        <tr align="center">
             <td>{{ $data['name'] }}</td>
             <td>{{ $data['phone'] }}</td>
             <td>{{ $data['previouslyContactedUs'] === true ? 'Да' : 'Нет' }}</td>

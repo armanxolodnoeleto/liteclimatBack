@@ -22,7 +22,7 @@
             </tr>
         </thead>
         <tbody>
-            <tr>
+            <tr align="center">
                 <td>{{ $data['checkoutData']['name'] }}</td>
                 <td>{{ $data['checkoutData']['last_name'] }}</td>
                 <td>{{ $data['checkoutData']['email'] }}</td>
@@ -47,7 +47,7 @@
         </thead>
         <tbody>
             @foreach($data['productsInfo'] as $product)
-                <tr>
+                <tr align="center">
                     <td>{{ $product->id }}</td>
                     <td>{{ $product->model. ' '. $product->series_name. ' '. $product->brand }}</td>
                     <td>{{ $product->price }}</td>
