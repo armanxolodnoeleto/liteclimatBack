@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Services\MailService;
+use App\Services\PhotoUploadService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
@@ -114,7 +115,41 @@ class FeedbackController extends Controller
         $mailSender->sendMail($contactUsData, $theme, $view);
 
         return response()->json('success');
+    }
 
+    public function review(Request $request) {
+        $reviewImages = $request->file();
+        $projectId = $request->header('projectId');
+        $reviewData = $request->except('file');
+        $newReviewPhotos = [];
+
+        try {
+            if ($projectId == config('projects.lk')) {
+                $table = 'lt_reviews';
+            }else {
+                $table = 'xl_reviews';
+            }
+            $reviewId = DB::table($table)
+                ->insertGetId($reviewData);
+
+            if ($request->hasFile('file')) {
+                $photoUploader = new PhotoUploadService($projectId);
+                $dir = 'uploads/reviews/';
+                foreach ($reviewImages as $key => $reviewImage) {
+                    $newReviewPhotos = [];
+                    foreach ($reviewImage as $item) {
+                        $photo = $photoUploader->uploadPhoto($item, $dir);
+                        $newReviewPhotos[] = ['project_id' => $projectId, 'review_id' => $reviewId, 'file_original_name' => $photo['original_name'], 'folder' => $photo['dir'], 'file_name' => $photo['full_name'], 'file_format' => $photo['format']];
+                    }
+                }
+                DB::table('project_review_images')
+                    ->insert($newReviewPhotos);
+
+                return response()->json('success');
+            }
+        }catch (\Exception $exception) {
+            return response()->json($exception->getMessage());
+        }
     }
 
 }
