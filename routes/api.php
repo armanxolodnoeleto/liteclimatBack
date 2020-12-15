@@ -25,3 +25,4 @@ Route::get('getFilterData/{categoryId?}', 'ProductsController@getFilterData');
 Route::post('searchProduct', 'ProductsController@searchProduct');
 Route::post('checkout', 'FeedbackController@checkout');
 Route::post('oneClickOrder', 'FeedbackController@oneClickOrder');
+Route::post('contactUs', 'FeedbackController@contactUs');

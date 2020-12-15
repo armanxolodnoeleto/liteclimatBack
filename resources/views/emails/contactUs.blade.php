@@ -10,20 +10,18 @@
 <table align="center">
     <thead>
     <tr>
-        <th>Имя</th>
-        <th>Фамилия</th>
+        <th>ФИО</th>
+        <th>Емайл</th>
         <th>Телефон</th>
-        <th>Удобное время для звонка</th>
-        <th>Комментарий</th>
+        <th>Коммениарий</th>
     </tr>
     </thead>
     <tbody>
     <tr align="center">
-        <td>{{ $data['name'] }}</td>
-        <td>{{ isset($data['last_name']) ? $data['last_name'] : '' }}</td>
+        <td>{{ $data['full_name'] }}</td>
+        <td>{{ isset($data['email']) ? $data['email'] : '' }}</td>
         <td>{{ $data['phone'] }}</td>
-        <td>{{ isset($data['hour']) ? $data['hour'] : '' }}</td>
-        <td>{{ isset($data['comment']) ? $data['comment'] : '' }}</td>
+        <td>{{ $data['comment'] }}</td>
     </tr>
     </tbody>
 </table>
