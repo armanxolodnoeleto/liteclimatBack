@@ -12,13 +12,18 @@ class FeedbackController extends Controller
     public function checkout(Request $request) {
         $checkoutData = $request->except(['products', '/api/checkout']);
         $projectId = $request->header('projectId');
-        $validator = Validator::make($checkoutData, [
+        $validatedArray = [
             'name' => 'required|max:255',
-            'last_name' => 'required',
             'email' => 'email|required',
             'phone_number' => 'required',
             'delivery_address' => 'required',
-        ]);
+        ];
+
+        if ($projectId == config('projects.lk')) {
+            $validatedArray['last_name'] = 'required';
+        }
+
+        $validator = Validator::make($checkoutData, $validatedArray);
 
         if ($validator->fails()) {
             return response()->json(['errors'=>$validator->errors()]);
