@@ -80,13 +80,16 @@ class FeedbackController extends Controller
         if ($projectId == config('projects.lk')) {
             $theme = 'Заявка с корзины (Купить в 1 клик)';
             $view = 'emails.oneClickOrder';
+            $email = "gogiloloyan11@gmail.com";//
         }else {
             $theme = 'Заказ обратного звонка';
             $view = 'emails.orderCallback';
+            $email = "david.burnazyan.96@gmail.com";//
         }
 
         $mailSender = new MailService($projectId);
-        $mailSender->sendMail($orderData, $theme, $view);
+//        $mailSender->sendMail($orderData, $theme, $view);
+        $mailSender->sendMailToClient($email, $orderData, $theme, $view);//
 
         return response()->json('success');
     }
