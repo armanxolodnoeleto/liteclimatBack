@@ -68,7 +68,6 @@ class FeedbackController extends Controller
             'name' => 'required|max:255',
             'phone' => 'required|max:255',
         ]);
-
         if ($validator->fails()) {
             return response()->json(['errors'=>$validator->errors()]);
         }
@@ -85,6 +84,29 @@ class FeedbackController extends Controller
         $mailSender->sendMail($orderData, $theme, $view);
 
         return response()->json('success');
+    }
+
+    public function contactUs(Request $request) {
+        $contactUsData = $request->all();
+        $projectId = $request->header('projectId');
+
+        $validator = Validator::make($contactUsData, [
+            'full_name' => 'required',
+            'phone' => 'required',
+            'comment' => 'required',
+        ]);
+        if ($validator->fails()) {
+            return response()->json(['errors'=>$validator->errors()]);
+        }
+
+        $theme = 'Обратная связь';
+        $view = 'emails.contactUs';
+
+        $mailSender = new MailService($projectId);
+        $mailSender->sendMail($contactUsData, $theme, $view);
+
+        return response()->json('success');
+
     }
 
 }
