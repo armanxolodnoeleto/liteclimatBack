@@ -26,12 +26,7 @@ class PhotoUploadService {
         if(!file_exists(public_path($dir))){
             mkdir(public_path($dir), 0777);
         }
-        if(!file_exists(public_path($dir.'/original'))){
-            mkdir(public_path($dir.'/original'), 0777);
-        }
-
         $file->move($dir, $file_name);
-        $this->save();
         $return['full_name'] = $file_name;
         return $return;
     }

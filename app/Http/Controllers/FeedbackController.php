@@ -118,7 +118,6 @@ class FeedbackController extends Controller
     }
 
     public function review(Request $request) {
-        $reviewImages = $request->file();
         $projectId = $request->header('projectId');
         $reviewData = $request->except('file');
         $newReviewPhotos = [];
@@ -129,24 +128,25 @@ class FeedbackController extends Controller
             }else {
                 $table = 'xl_reviews';
             }
+            $reviewData['project_id'] = $projectId;
             $reviewId = DB::table($table)
                 ->insertGetId($reviewData);
 
             if ($request->hasFile('file')) {
+                $reviewImages = $request->file();
                 $photoUploader = new PhotoUploadService($projectId);
                 $dir = 'uploads/reviews/';
                 foreach ($reviewImages as $key => $reviewImage) {
                     $newReviewPhotos = [];
                     foreach ($reviewImage as $item) {
                         $photo = $photoUploader->uploadPhoto($item, $dir);
-                        $newReviewPhotos[] = ['project_id' => $projectId, 'review_id' => $reviewId, 'file_original_name' => $photo['original_name'], 'folder' => $photo['dir'], 'file_name' => $photo['full_name'], 'file_format' => $photo['format']];
+                        $newReviewPhotos[] = ['project_id' => $projectId, 'review_id' => $reviewId, 'file_original_name' => $photo['original_name'], 'folder' => $photo['dir'], 'file_name' => $photo['name'], 'file_format' => $photo['format']];
                     }
                 }
                 DB::table('project_review_images')
                     ->insert($newReviewPhotos);
-
-                return response()->json('success');
             }
+            return response()->json('success');
         }catch (\Exception $exception) {
             return response()->json($exception->getMessage());
         }
