@@ -81,18 +81,19 @@ class FeedbackController extends Controller
         if ($projectId == config('projects.lk')) {
             $theme = 'Заявка с корзины (Купить в 1 клик)';
             $view = 'emails.oneClickOrder';
-            $email = "gogiloloyan11@gmail.com";//
         }else {
             $theme = 'Заказ обратного звонка';
             $view = 'emails.orderCallback';
-            $email = "david.burnazyan.96@gmail.com";//
         }
 
-        $mailSender = new MailService($projectId);
-//        $mailSender->sendMail($orderData, $theme, $view);
-        $mailSender->sendMailToClient($email, $orderData, $theme, $view);//
+        try {
+            $mailSender = new MailService($projectId);
+            $mailSender->sendMail($orderData, $theme, $view);
 
-        return response()->json('success');
+            return response()->json('success');
+        }catch (\Exception $exception) {
+            return response()->json($exception->getMessage());
+        }
     }
 
     public function contactUs(Request $request) {
@@ -111,10 +112,14 @@ class FeedbackController extends Controller
         $theme = 'Обратная связь';
         $view = 'emails.contactUs';
 
-        $mailSender = new MailService($projectId);
-        $mailSender->sendMail($contactUsData, $theme, $view);
+        try {
+            $mailSender = new MailService($projectId);
+            $mailSender->sendMail($contactUsData, $theme, $view);
 
-        return response()->json('success');
+            return response()->json('success');
+        }catch (\Exception $exception) {
+            return response()->json($exception->getMessage());
+        }
     }
 
     public function review(Request $request) {
@@ -147,6 +152,34 @@ class FeedbackController extends Controller
                     ->insert($newReviewPhotos);
             }
             return response()->json('success');
+        }catch (\Exception $exception) {
+            return response()->json($exception->getMessage());
+        }
+    }
+
+    public function getReviews(Request $request) {
+        $projectId = $request->header('projectId');
+        if ($projectId == config('projects.lk')) {
+            $table = 'lt_reviews';
+        }else {
+            $table = 'xl_reviews';
+        }
+        try {
+            $response = [];
+            $reviews = DB::table($table)
+                ->paginate(10);
+            $reviewIds = $reviews->pluck('id');
+
+            $reviewImages = DB::table('project_review_images')
+                ->whereIn('review_id', $reviewIds)
+                ->where('project_id', $projectId)
+                ->select('review_id', 'folder', 'file_name', 'file_format')
+                ->get();
+
+            $response['total'] = $reviews->total();
+            $response['reviews'] = $reviews->items();
+            $response['reviewImages'] = $reviewImages;
+            return response()->json($response);
         }catch (\Exception $exception) {
             return response()->json($exception->getMessage());
         }
