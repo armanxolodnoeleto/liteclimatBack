@@ -167,6 +167,7 @@ class FeedbackController extends Controller
         try {
             $response = [];
             $reviews = DB::table($table)
+                ->orderBy('rating', 'DESC')
                 ->paginate(10);
             $reviewIds = $reviews->pluck('id');
 

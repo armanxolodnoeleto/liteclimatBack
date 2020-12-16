@@ -27,4 +27,4 @@ Route::post('checkout', 'FeedbackController@checkout');
 Route::post('oneClickOrder', 'FeedbackController@oneClickOrder');
 Route::post('contactUs', 'FeedbackController@contactUs');
 Route::post('review', 'FeedbackController@review');
-Route::post('getReviews', 'FeedbackController@getReviews');
+Route::get('getReviews', 'FeedbackController@getReviews');
