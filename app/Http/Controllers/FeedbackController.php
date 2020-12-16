@@ -62,7 +62,7 @@ class FeedbackController extends Controller
 
             return response()->json('success');
         } catch (\Exception $exception) {
-            return $exception->getMessage();
+            return response()->json(['errors'=>$validator->errors()]);
         }
     }
 
@@ -92,7 +92,7 @@ class FeedbackController extends Controller
 
             return response()->json('success');
         }catch (\Exception $exception) {
-            return response()->json($exception->getMessage());
+            return response()->json(['errors'=>$validator->errors()]);
         }
     }
 
@@ -118,21 +118,39 @@ class FeedbackController extends Controller
 
             return response()->json('success');
         }catch (\Exception $exception) {
-            return response()->json($exception->getMessage());
+            return response()->json(['errors'=>$exception->getMessage()]);
         }
     }
 
     public function review(Request $request) {
         $projectId = $request->header('projectId');
-        $reviewData = $request->except('file');
-        $newReviewPhotos = [];
+        $reviewData = $request->except('file', '/api/review');
+
+        if ($projectId == config('projects.lk')) {
+            $validator = Validator::make($reviewData, [
+                'name' => 'required',
+                'last_name' => 'required',
+                'limitations' => 'required',
+                'advantages' => 'required',
+                'comment' => 'required',
+                'rating' => 'required',
+            ]);
+            $table = 'lt_reviews';
+        }else {
+            $validator = Validator::make($reviewData, [
+                'full_name' => 'required',
+                'date' => 'required',
+                'comment' => 'required',
+                'rating' => 'required',
+            ]);
+            $table = 'xl_reviews';
+        }
+        if ($validator->fails()) {
+            return response()->json(['errors'=>$validator->errors()]);
+        }
 
         try {
-            if ($projectId == config('projects.lk')) {
-                $table = 'lt_reviews';
-            }else {
-                $table = 'xl_reviews';
-            }
+            $newReviewPhotos = [];
             $reviewData['project_id'] = $projectId;
             $reviewId = DB::table($table)
                 ->insertGetId($reviewData);
@@ -153,7 +171,7 @@ class FeedbackController extends Controller
             }
             return response()->json('success');
         }catch (\Exception $exception) {
-            return response()->json($exception->getMessage());
+            return response()->json(['errors'=>$exception->getMessage()]);
         }
     }
 
@@ -182,7 +200,7 @@ class FeedbackController extends Controller
             $response['reviewImages'] = $reviewImages;
             return response()->json($response);
         }catch (\Exception $exception) {
-            return response()->json($exception->getMessage());
+            return response()->json(['errors'=>$exception->getMessage()]);
         }
     }
 
