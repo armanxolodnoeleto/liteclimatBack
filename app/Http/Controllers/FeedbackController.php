@@ -130,10 +130,9 @@ class FeedbackController extends Controller
             $validator = Validator::make($reviewData, [
                 'name' => 'required',
                 'last_name' => 'required',
-                'limitations' => 'required',
                 'advantages' => 'required',
-                'comment' => 'required',
                 'rating' => 'required',
+                'date' => 'required'
             ]);
             $table = 'lt_reviews';
         }else {
@@ -152,6 +151,7 @@ class FeedbackController extends Controller
         try {
             $newReviewPhotos = [];
             $reviewData['project_id'] = $projectId;
+            $reviewData['admin_comment'] = 'Администратор сайта лайт климат здравствуйте, '. $reviewData['name'] . ' ' . $reviewData['last_name'] .'. Спасибо вам за отзыв, всегда готовы вам помочь.';
             $reviewId = DB::table($table)
                 ->insertGetId($reviewData);
 
