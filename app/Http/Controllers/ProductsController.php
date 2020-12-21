@@ -252,4 +252,25 @@ class ProductsController extends Controller
         return $query;
     }
 
+    public function newProducts(Request $request) {
+        $projectId = $request->header('projectId');
+        $newProducts = DB::table('prices')
+            ->leftJoin('products', 'prices.product_id', '=', 'products.id')
+            ->leftJoin('product_manufacturers', 'products.manufacturer_id', '=', 'product_manufacturers.id')
+            ->leftJoin('product_series', 'products.series_id', '=', 'product_series.id')
+            ->leftJoin('product_series_photos', 'product_series.id', '=', 'product_series_photos.series_id')
+            ->leftJoin('photos', 'products.id', '=', 'photos.product_id')
+            ->where('prices.project_id', $projectId)
+            ->where('prices.status', 1)
+            ->where('product_series_photos.cover_photo',1)
+            ->where('prices.price', '!=', 0)
+            ->select('products.id', 'products.name as model', 'product_manufacturers.name as brand', 'product_manufacturers.logo as brand_logo', 'product_series.series_name_ru as series_name', 'product_series_photos.folder as series_picture_folder', 'product_series_photos.file_name as series_picture_file_name','product_series_photos.file_format as series_picture_format','photos.folder as product_picture_folder','photos.file_name as product_picture_file_name', 'photos.file_format as product_picture_format', 'prices.price')
+            ->groupBy('products.id', 'products.name', 'product_manufacturers.name', 'product_manufacturers.logo', 'product_series.series_name_ru', 'product_series_photos.folder', 'product_series_photos.file_name','product_series_photos.file_format','photos.folder','photos.file_name', 'photos.file_format', 'prices.price')
+            ->orderBy('prices.product_id', 'DESC')
+            ->take(6)
+            ->get();
+
+        return response()->json($newProducts);
+    }
+
 }
