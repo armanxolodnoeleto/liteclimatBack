@@ -31,8 +31,6 @@ class ProductsController extends Controller
 //            ->where('product_series_photos.cover_photo', '=', 1)
             ->where('prices.price', '!=', 0);
 
-//        return $query->where('products.id', 5497)->get();
-
         if ($request->has('manufacturerCountries')) {
             if (!$issetProductCharacteristic) {
                 $query = $query->leftJoin('product_characteristics', 'prices.product_id', '=', 'product_characteristics.product_id');
@@ -86,8 +84,8 @@ class ProductsController extends Controller
         }
 
         $query = $query->select('products.id', 'products.name as model', 'product_manufacturers.name as brand', 'product_manufacturers.logo as brand_logo', 'product_series.series_name_ru as series_name', DB::raw('CONCAT("[", GROUP_CONCAT(JSON_OBJECT( "cover_photo", product_series_photos.cover_photo,"series_picture_folder",  product_series_photos.folder, "series_picture_file_name", product_series_photos.file_name, "series_picture_format", product_series_photos.file_format)), "]") as cover_photo'), 'photos.folder as product_picture_folder','photos.file_name as product_picture_file_name', 'photos.file_format as product_picture_format', 'prices.price', 'prices.setup_price')
-            ->groupBy('products.id', 'products.name', 'product_manufacturers.name', 'product_manufacturers.logo', 'product_series.series_name_ru', 'photos.folder','photos.file_name', 'photos.file_format', 'prices.price', 'prices.setup_price');
-//            ->distinct();
+            ->groupBy('products.id', 'products.name', 'product_manufacturers.name', 'product_manufacturers.logo', 'product_series.series_name_ru', 'photos.folder','photos.file_name', 'photos.file_format', 'prices.price', 'prices.setup_price')
+            ->distinct();
 
         if ($request->has('orderBy')) {
             $query->orderBy('prices.price', $request->orderBy);
@@ -223,7 +221,7 @@ class ProductsController extends Controller
                 ->leftJoin('photos', 'products.id', '=', 'photos.product_id')
                 ->where('prices.project_id', $projectId)
                 ->where('prices.status', 1)
-                ->where('product_series_photos.cover_photo',1)
+//                ->where('product_series_photos.cover_photo',1)
                 ->where('prices.price', '!=', 0)
                 ->where(function($q) use ($searchableColumns, $searchBy) {
                     foreach ($searchableColumns as $searchableColumn) {
