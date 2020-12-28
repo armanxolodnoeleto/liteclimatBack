@@ -228,7 +228,7 @@ class ProductsController extends Controller
                         $q->orWhere($searchableColumn, 'LIKE', "%{$searchBy}%");
                     }
                 })
-                ->select('products.id', 'products.name as model', 'product_manufacturers.name as brand', 'product_manufacturers.logo as brand_logo', 'product_series.series_name_ru as series_name', 'product_series_photos.folder as series_picture_folder', 'product_series_photos.file_name as series_picture_file_name','product_series_photos.file_format as series_picture_format','photos.folder as product_picture_folder','photos.file_name as product_picture_file_name', 'photos.file_format as product_picture_format', 'prices.price')
+                ->select('products.id', 'products.name as model', 'product_manufacturers.name as brand', 'product_manufacturers.logo as brand_logo', DB::raw('CONCAT("[", GROUP_CONCAT(JSON_OBJECT( "cover_photo", product_series_photos.cover_photo,"series_picture_folder",  product_series_photos.folder, "series_picture_file_name", product_series_photos.file_name, "series_picture_format", product_series_photos.file_format)), "]") as cover_photo'), 'photos.folder as product_picture_folder','photos.file_name as product_picture_file_name', 'photos.file_format as product_picture_format', 'prices.price')
                 ->groupBy('products.id', 'products.name', 'product_manufacturers.name', 'product_manufacturers.logo', 'product_series.series_name_ru', 'product_series_photos.folder', 'product_series_photos.file_name','product_series_photos.file_format','photos.folder','photos.file_name', 'photos.file_format', 'prices.price')
                 ->paginate(15);
 
@@ -265,7 +265,7 @@ class ProductsController extends Controller
             ->where('prices.status', 1)
             ->where('product_series_photos.cover_photo',1)
             ->where('prices.price', '!=', 0)
-            ->select('products.id', 'products.name as model', 'product_manufacturers.name as brand', 'product_manufacturers.logo as brand_logo', 'product_series.series_name_ru as series_name', 'product_series_photos.folder as series_picture_folder', 'product_series_photos.file_name as series_picture_file_name','product_series_photos.file_format as series_picture_format','photos.folder as product_picture_folder','photos.file_name as product_picture_file_name', 'photos.file_format as product_picture_format', 'prices.price')
+            ->select('products.id', 'products.name as model', 'product_manufacturers.name as brand', 'product_manufacturers.logo as brand_logo', DB::raw('CONCAT("[", GROUP_CONCAT(JSON_OBJECT( "cover_photo", product_series_photos.cover_photo,"series_picture_folder",  product_series_photos.folder, "series_picture_file_name", product_series_photos.file_name, "series_picture_format", product_series_photos.file_format)), "]") as cover_photo'), 'photos.folder as product_picture_folder','photos.file_name as product_picture_file_name', 'photos.file_format as product_picture_format', 'prices.price')
             ->groupBy('products.id', 'products.name', 'product_manufacturers.name', 'product_manufacturers.logo', 'product_series.series_name_ru', 'product_series_photos.folder', 'product_series_photos.file_name','product_series_photos.file_format','photos.folder','photos.file_name', 'photos.file_format', 'prices.price')
             ->orderBy('prices.product_id', 'DESC')
             ->take(6)
