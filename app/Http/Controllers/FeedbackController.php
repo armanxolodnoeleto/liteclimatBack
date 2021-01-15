@@ -187,7 +187,7 @@ class FeedbackController extends Controller
             $reviews = DB::table($table)
                 ->where('approve', 1)
                 ->orderBy('rating', 'DESC')
-                ->paginate(10);
+                ->paginate(12);
             $reviewIds = $reviews->pluck('id');
 
             $reviewImages = DB::table('project_review_images')

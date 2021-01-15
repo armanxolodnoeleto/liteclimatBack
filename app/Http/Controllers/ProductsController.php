@@ -4,18 +4,17 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-
 class ProductsController extends Controller
 {
     public function getProducts(Request $request, $categoryId) {
         $projectId = $request->header('projectId');
         $data = [];
         $query = DB::table('prices')
-            ->leftJoin('product_to_categories', 'prices.product_id', '=', 'product_to_categories.product_id')
+            ->join('product_to_categories', 'prices.product_id', '=', 'product_to_categories.product_id', 'inner')
             ->leftJoin('products', 'product_to_categories.product_id', '=', 'products.id')
             ->leftJoin('product_manufacturers', 'products.manufacturer_id', '=', 'product_manufacturers.id')
-            ->join('product_series', 'products.series_id', '=', 'product_series.id', 'left outer')
-            ->join('product_series_photos', 'product_series.id', '=', 'product_series_photos.series_id', 'left outer')
+            ->leftJoin('product_series', 'products.series_id', '=', 'product_series.id')
+            ->leftJoin('product_series_photos', 'product_series.id', '=', 'product_series_photos.series_id')
             ->leftJoin('photos', 'products.id', '=', 'photos.product_id');
 
         $filterData = $request->except('manufacturerCountries');
@@ -28,7 +27,6 @@ class ProductsController extends Controller
         $query = $query->where('prices.project_id', $projectId)
             ->where('product_to_categories.category_id', $categoryId)
             ->where('prices.status', 1)
-//            ->where('product_series_photos.cover_photo', '=', 1)
             ->where('prices.price', '!=', 0);
 
         if ($request->has('manufacturerCountries')) {
@@ -84,14 +82,15 @@ class ProductsController extends Controller
         }
 
         $query = $query->select('products.id', 'products.name as model', 'product_manufacturers.name as brand', 'product_manufacturers.logo as brand_logo', 'product_series.series_name_ru as series_name', DB::raw('CONCAT("[", GROUP_CONCAT(JSON_OBJECT( "cover_photo", product_series_photos.cover_photo,"series_picture_folder",  product_series_photos.folder, "series_picture_file_name", product_series_photos.file_name, "series_picture_format", product_series_photos.file_format)), "]") as cover_photo'), 'photos.folder as product_picture_folder','photos.file_name as product_picture_file_name', 'photos.file_format as product_picture_format', 'prices.price', 'prices.setup_price')
-            ->groupBy('products.id', 'products.name', 'product_manufacturers.name', 'product_manufacturers.logo', 'product_series.series_name_ru', 'photos.folder','photos.file_name', 'photos.file_format', 'prices.price', 'prices.setup_price')
-            ->distinct();
+            ->groupBy('products.id');
 
         if ($request->has('orderBy')) {
             $query->orderBy('prices.price', $request->orderBy);
+        }else {
+            $query->orderByRaw("NULL");
         }
 
-        $products = $query->paginate(10);
+        $products = $query->paginate(12);
 
         $productIds = $products->pluck('id');
 
@@ -100,7 +99,7 @@ class ProductsController extends Controller
             ->leftJoin('characteristic_attributes', 'product_characteristics.attribute_id', '=', 'characteristic_attributes.id')
             ->whereIn('product_id', $productIds)
             ->where('product_characteristics.characteristic_id', 3)
-            ->select('product_characteristics.product_id as id', 'characteristics.name_ru as characteristic_name_ru','characteristic_attributes.name_ru as characteristic_attribute_name')
+            ->select('product_characteristics.product_id as id', 'characteristics.name_ru as characteristic_name_ru', 'characteristic_attributes.name_ru as characteristic_attribute_name')
             ->get()->toArray();
 
         $data['products_info']['total'] = $products->total();
@@ -114,15 +113,16 @@ class ProductsController extends Controller
         $projectId = $request->header('projectId');
         $data = [];
         $product = DB::table('products')
-            ->leftJoin('prices', 'products.id', '=', 'prices.product_id')
+            ->join('prices', 'products.id', '=', 'prices.product_id', "inner")
             ->leftJoin('product_manufacturers', 'products.manufacturer_id', '=', 'product_manufacturers.id')
             ->leftJoin('product_manufacturer_certificates', 'product_manufacturers.id', '=', 'product_manufacturer_certificates.product_manufacturer_id')
             ->leftJoin('product_series', 'products.series_id', '=', 'product_series.id')
+            ->leftJoin('product_categories', 'product_series.category_id', '=', 'product_categories.id')
             ->leftJoin('product_series_photos', 'product_series.id', '=', 'product_series_photos.series_id')
             ->where('prices.project_id', $projectId)
             ->where('products.id', $productId)
-            ->select('products.name as model', 'products.id as articule', 'products.description_ru as description', 'prices.market', 'prices.setup_price', 'prices.price', 'product_manufacturers.name as brand', 'product_manufacturers.logo as manufacturer_logo', 'product_manufacturer_certificates.folder as certificate_folder', 'product_manufacturer_certificates.file_name as certificate_file_name', 'product_manufacturer_certificates.file_format as certificate_file_format', 'product_series.series_name_ru as series_name', 'product_series.id as series_id')
-            ->groupBy('products.id', 'products.name', 'prices.market', 'prices.setup_price', 'prices.price', 'product_manufacturers.name', 'product_manufacturers.logo', 'product_manufacturer_certificates.folder', 'product_manufacturer_certificates.file_name', 'product_manufacturer_certificates.file_format', 'product_series.series_name_ru', 'product_series_photos.folder', 'product_series_photos.file_format', 'products.description_ru', 'product_series.id')
+            ->select('products.name as model', 'products.id as articule', 'products.description_ru as description', 'prices.market', 'prices.setup_price', 'prices.price', 'product_manufacturers.name as brand', 'product_manufacturers.logo as manufacturer_logo', 'product_manufacturer_certificates.folder as certificate_folder', 'product_manufacturer_certificates.file_name as certificate_file_name', 'product_manufacturer_certificates.file_format as certificate_file_format', 'product_series.series_name_ru as series_name', 'product_series.id as series_id', 'product_categories.product_categories_name_ru as category_name', 'product_categories.id as category_id')
+            ->groupBy('products.id')
             ->first();
 
         $characteristics = DB::table('product_characteristics')
@@ -221,7 +221,6 @@ class ProductsController extends Controller
                 ->leftJoin('photos', 'products.id', '=', 'photos.product_id')
                 ->where('prices.project_id', $projectId)
                 ->where('prices.status', 1)
-//                ->where('product_series_photos.cover_photo',1)
                 ->where('prices.price', '!=', 0)
                 ->where(function($q) use ($searchableColumns, $searchBy) {
                     foreach ($searchableColumns as $searchableColumn) {
@@ -229,7 +228,7 @@ class ProductsController extends Controller
                     }
                 })
                 ->select('products.id', 'products.name as model', 'product_manufacturers.name as brand', 'product_manufacturers.logo as brand_logo', DB::raw('CONCAT("[", GROUP_CONCAT(JSON_OBJECT( "cover_photo", product_series_photos.cover_photo,"series_picture_folder",  product_series_photos.folder, "series_picture_file_name", product_series_photos.file_name, "series_picture_format", product_series_photos.file_format)), "]") as cover_photo'), 'photos.folder as product_picture_folder','photos.file_name as product_picture_file_name', 'photos.file_format as product_picture_format', 'prices.price')
-                ->groupBy('products.id', 'products.name', 'product_manufacturers.name', 'product_manufacturers.logo', 'product_series.series_name_ru', 'product_series_photos.folder', 'product_series_photos.file_name','product_series_photos.file_format','photos.folder','photos.file_name', 'photos.file_format', 'prices.price')
+                ->groupBy('products.id')
                 ->paginate(15);
 
             $data['searchResponse'] = $searchResponse->items();
@@ -256,7 +255,7 @@ class ProductsController extends Controller
     public function newProducts(Request $request) {
         $projectId = $request->header('projectId');
         $newProducts = DB::table('prices')
-            ->leftJoin('products', 'prices.product_id', '=', 'products.id')
+            ->join('products', 'prices.product_id', '=', 'products.id', 'inner')
             ->leftJoin('product_manufacturers', 'products.manufacturer_id', '=', 'product_manufacturers.id')
             ->leftJoin('product_series', 'products.series_id', '=', 'product_series.id')
             ->leftJoin('product_series_photos', 'product_series.id', '=', 'product_series_photos.series_id')
@@ -266,8 +265,8 @@ class ProductsController extends Controller
             ->where('product_series_photos.cover_photo',1)
             ->where('prices.price', '!=', 0)
             ->select('products.id', 'products.name as model', 'product_manufacturers.name as brand', 'product_manufacturers.logo as brand_logo', DB::raw('CONCAT("[", GROUP_CONCAT(JSON_OBJECT( "cover_photo", product_series_photos.cover_photo,"series_picture_folder",  product_series_photos.folder, "series_picture_file_name", product_series_photos.file_name, "series_picture_format", product_series_photos.file_format)), "]") as cover_photo'), 'photos.folder as product_picture_folder','photos.file_name as product_picture_file_name', 'photos.file_format as product_picture_format', 'prices.price')
-            ->groupBy('products.id', 'products.name', 'product_manufacturers.name', 'product_manufacturers.logo', 'product_series.series_name_ru', 'product_series_photos.folder', 'product_series_photos.file_name','product_series_photos.file_format','photos.folder','photos.file_name', 'photos.file_format', 'prices.price')
-            ->orderBy('prices.product_id', 'DESC')
+            ->groupBy('products.id')
+            ->orderByDesc('prices.product_id')
             ->take(6)
             ->get();
 
