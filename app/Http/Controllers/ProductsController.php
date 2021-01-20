@@ -210,7 +210,7 @@ class ProductsController extends Controller
         $projectId = $request->header('projectId');
         $searchBy = $request->search;
 
-        $searchableColumns = ['products.name', 'product_manufacturers.name', 'product_series.series_name_ru'];
+        $searchableColumns = ['products.id', 'products.name', 'product_manufacturers.name', 'product_series.series_name_ru'];
 
         if ($searchBy) {
             $searchResponse = DB::table('prices')

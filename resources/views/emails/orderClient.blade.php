@@ -2,9 +2,9 @@
 <body>
 <div style="width:90%;margin:0 auto;padding-bottom: 50px;">
     @if ($projectId == config('projects.lk'))
-        <a href="https://laitklimat.ru"><img src="http://projects-backend.ru/public/uploads/logos/laitklimat.jpg"></a>
+        <a href="https://laitklimat.ru"><img src="http://back.xolodnoeleto.ru/public/uploads/logos/laitklimat.jpg"></a>
     @else
-        <a href="https://xolodnoeleto.ru"><img src="http://projects-backend.ru/public/uploads/logos/xolod.png"></a>
+        <a href="https://xolodnoeleto.ru"><img src="http://back.xolodnoeleto.ru/public/uploads/logos/xolod.png"></a>
     @endif
     <h1 style="text-align:center">Здравствуйте, Ваш заказ принят!</h1>
     <table cellspacing="0"   align="center">
@@ -34,7 +34,7 @@
         </tr>
     </table>
     @if ($projectId == config('projects.lk'))
-        <p style="margin-top: 60px;"><img src="http://projects-backend.ru/public/uploads/logos/light_climat.png" style="width:530px;"></p>
+        <p style="margin-top: 60px;"><img src="http://back.xolodnoeleto.ru/public/uploads/logos/light_climat.png" style="width:530px;"></p>
     @endif
     <p>По всем вопросам<br>E-mail: {{ $projectId == config('projects.lk') ? 'zakaz@laitklimat.ru' : 'zakaz@xolodnoeleto.ru' }}<br>Телефон: {{ $projectId == config('projects.lk') ? '+7[495] 668-65-11' : '+7 (499) 286-89-05' }}</p>
 </div>
