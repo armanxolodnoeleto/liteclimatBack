@@ -31,3 +31,5 @@ Route::post('oneClickOrder', 'FeedbackController@oneClickOrder');
 Route::post('contactUs', 'FeedbackController@contactUs');
 Route::post('review', 'FeedbackController@review');
 Route::get('getReviews', 'FeedbackController@getReviews');
+
+Route::post('chatFeedBack', 'FeedbackController@chatFeedBack');

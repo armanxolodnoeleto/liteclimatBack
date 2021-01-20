@@ -81,7 +81,7 @@ class ProductsController extends Controller
             }
         }
 
-        $query = $query->select('products.id', 'products.name as model', 'product_manufacturers.name as brand', 'product_manufacturers.logo as brand_logo', 'product_series.series_name_ru as series_name', DB::raw('CONCAT("[", GROUP_CONCAT(JSON_OBJECT( "cover_photo", product_series_photos.cover_photo,"series_picture_folder",  product_series_photos.folder, "series_picture_file_name", product_series_photos.file_name, "series_picture_format", product_series_photos.file_format)), "]") as cover_photo'), 'photos.folder as product_picture_folder','photos.file_name as product_picture_file_name', 'photos.file_format as product_picture_format', 'prices.price', 'prices.setup_price')
+        $query = $query->select('products.id', 'products.name as model', 'product_manufacturers.name as brand', 'product_manufacturers.logo as brand_logo', 'product_series.series_name_ru as series_name', DB::raw('CONCAT("[", GROUP_CONCAT(JSON_OBJECT( "cover_photo", product_series_photos.cover_photo,"series_picture_folder",  product_series_photos.folder, "series_picture_file_name", product_series_photos.file_name, "series_picture_format", product_series_photos.file_format)), "]") as cover_photo'), 'photos.folder as product_picture_folder','photos.file_name as product_picture_file_name', 'photos.file_format as product_picture_format', 'prices.price', 'prices.setup_price', 'prices.has_chat', 'prices.has_sale', 'prices.price_with_setup', 'prices.price_without_setup')
             ->groupBy('products.id');
 
         if ($request->has('orderBy')) {
@@ -121,7 +121,7 @@ class ProductsController extends Controller
             ->leftJoin('product_series_photos', 'product_series.id', '=', 'product_series_photos.series_id')
             ->where('prices.project_id', $projectId)
             ->where('products.id', $productId)
-            ->select('products.name as model', 'products.id as articule', 'products.description_ru as description', 'prices.market', 'prices.setup_price', 'prices.price', 'product_manufacturers.name as brand', 'product_manufacturers.logo as manufacturer_logo', 'product_manufacturer_certificates.folder as certificate_folder', 'product_manufacturer_certificates.file_name as certificate_file_name', 'product_manufacturer_certificates.file_format as certificate_file_format', 'product_series.series_name_ru as series_name', 'product_series.id as series_id', 'product_categories.product_categories_name_ru as category_name', 'product_categories.id as category_id')
+            ->select('products.name as model', 'products.id as articule', 'products.description_ru as description', 'prices.market', 'prices.setup_price', 'prices.price', 'prices.has_chat', 'prices.has_sale', 'prices.price_with_setup', 'prices.price_without_setup', 'product_manufacturers.name as brand', 'product_manufacturers.logo as manufacturer_logo', 'product_manufacturer_certificates.folder as certificate_folder', 'product_manufacturer_certificates.file_name as certificate_file_name', 'product_manufacturer_certificates.file_format as certificate_file_format', 'product_series.series_name_ru as series_name', 'product_series.id as series_id', 'product_categories.product_categories_name_ru as category_name', 'product_categories.id as category_id')
             ->groupBy('products.id')
             ->first();
 
@@ -161,21 +161,14 @@ class ProductsController extends Controller
             ->leftJoin('product_to_categories', 'prices.product_id', '=', 'product_to_categories.product_id')
             ->leftJoin('products', 'product_to_categories.product_id', '=', 'products.id')
             ->leftJoin('product_manufacturers', 'products.manufacturer_id', '=', 'product_manufacturers.id')
-            ->leftJoin('product_series', 'products.series_id', '=', 'product_series.id')
-            ->leftJoin('product_series_photos', 'product_series.id', '=', 'product_series_photos.series_id')
 
-            ->leftJoin('product_characteristics', 'prices.product_id', '=', 'product_characteristics.product_id')
-            ->leftJoin('characteristic_attributes', 'product_characteristics.characteristic_id', '=', 'characteristic_attributes.characteristic_id')
-
-            ->where('characteristic_attributes.characteristic_id', 14)
             ->where('prices.project_id', $projectId)
             ->where('product_to_categories.category_id', $categoryId)
             ->where('prices.status', 1)
-            ->where('product_series_photos.cover_photo', '=', 1)
             ->where('prices.price', '!=', 0)
 
-            ->select('characteristic_attributes.name_ru', DB::raw('COUNT(prices.product_id) as count'), 'product_manufacturers.logo', 'product_manufacturers.id')
-            ->groupBy('characteristic_attributes.name_ru', 'product_manufacturers.id', 'product_manufacturers.logo')
+            ->select(DB::raw('COUNT(prices.product_id) as count'), 'product_manufacturers.logo', 'product_manufacturers.id')
+            ->groupBy('product_manufacturers.id')
             ->get();
 
         $characteristicAttributes = DB::table('characteristic_to_categories')
