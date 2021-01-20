@@ -2,9 +2,9 @@
 <body>
 <div style="width:90%;margin:0 auto;padding-bottom: 50px;">
     @if ($projectId == config('projects.lk'))
-        <a href="https://laitklimat.ru"><img src="http://projects-backend.ru/public/uploads/logos/laitklimat.jpg"></a>
+        <a href="https://laitklimat.ru"><img src="http://back.projects-backend.ru/public/uploads/logos/laitklimat.jpg"></a>
     @else
-        <a href="https://xolodnoeleto.ru"><img src="http://projects-backend.ru/public/uploads/logos/xolod.png"></a>
+        <a href="https://xolodnoeleto.ru"><img src="http://back.projects-backend.ru/public/uploads/logos/xolod.png"></a>
     @endif
     <h1 style="text-align:center">Здравствуйте, Ваш заказ принят!</h1>
     <table cellspacing="0"   align="center">

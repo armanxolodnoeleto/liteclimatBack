@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Services\MailService;
 use App\Services\PhotoUploadService;
+use GuzzleHttp\Client;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
@@ -200,6 +201,50 @@ class FeedbackController extends Controller
             $response['reviews'] = $reviews->items();
             $response['reviewImages'] = $reviewImages;
             return response()->json($response);
+        }catch (\Exception $exception) {
+            return response()->json(['errors'=>$exception->getMessage()]);
+        }
+    }
+
+    public function chatFeedBack(Request $request) {
+        $projectId = $request->header('projectId');
+        $chatData = $request->except('/api/chatFeedBack');
+        $validator = Validator::make($chatData, [
+            'phone' => 'required',
+        ]);
+        if ($validator->fails()) {
+            return response()->json(['errors'=>$validator->errors()]);
+        }
+
+        $inCart = $chatData['in_cart'];
+        if ($request->has('is_unique')) {
+            $isUnique = 'Y- ';
+        }else {
+            $isUnique = 'Y+ ';
+        }
+        $theme = 'Заявка с всплывающего окна '.$inCart.' '.$isUnique;
+        $view = 'emails.chatFeedBack';
+
+        try {
+            $product = [];
+            if ($inCart == 'true') {
+                if ($request->has('product_id')) {
+                    $productId = $chatData['product_id'];
+                    $product = DB::table('products')
+                        ->join('prices', 'products.id', '=', 'prices.product_id')
+                        ->where('products.id', $productId)
+                        ->where('prices.project_id', $projectId)
+                        ->select('products.name', 'prices.price', 'prices.price_with_setup', 'prices.price_without_setup')
+                        ->get()
+                        ->toArray();
+                }
+            }
+
+            $chatData['product'] = $product;
+            $mailSender = new MailService($projectId);
+            $mailSender->sendMail($chatData, $theme, $view);
+
+            return response()->json('success');
         }catch (\Exception $exception) {
             return response()->json(['errors'=>$exception->getMessage()]);
         }
