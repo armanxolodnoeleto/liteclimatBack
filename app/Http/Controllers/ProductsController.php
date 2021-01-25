@@ -35,7 +35,7 @@ class ProductsController extends Controller
                 $issetProductCharacteristic = true;
             }
             $query = $query->whereIn('product_manufacturers.id', $request->manufacturerCountries);
-            $query = $query->where('product_characteristics.characteristic_id', '=', 14);
+//            $query = $query->where('product_characteristics.characteristic_id', '=', 14);
         }
 
         if ($request->has('fromTo')) {
@@ -87,7 +87,7 @@ class ProductsController extends Controller
         if ($request->has('orderBy')) {
             $query->orderBy('prices.price', $request->orderBy);
         }else {
-            $query->orderByRaw("NULL");
+            $query->orderBy('prices.price', 'ASC');
         }
 
         $products = $query->paginate(12);
@@ -169,6 +169,7 @@ class ProductsController extends Controller
 
             ->select(DB::raw('COUNT(prices.product_id) as count'), 'product_manufacturers.logo', 'product_manufacturers.id')
             ->groupBy('product_manufacturers.id')
+            ->orderBy('product_manufacturers.name', 'ASC')
             ->get();
 
         $characteristicAttributes = DB::table('characteristic_to_categories')
@@ -178,7 +179,8 @@ class ProductsController extends Controller
 //            ->where('product_categories.project_id', $projectId)
             ->where('characteristic_to_categories.category_id', $categoryId)
             ->select('characteristic_attributes.name_ru', 'characteristic_attributes.id', 'characteristic_attributes.characteristic_id', 'characteristics.name_ru as title', 'value_types.name')
-            ->groupBy('characteristic_attributes.name_ru', 'characteristic_attributes.id', 'characteristic_attributes.characteristic_id', 'characteristics.name_ru', 'value_types.name')
+            ->groupBy('characteristic_attributes.id')
+            ->orderBy('characteristic_attributes.name_ru', 'ASC')
             ->get();
 
         $textFilters = DB::table('characteristic_to_categories')

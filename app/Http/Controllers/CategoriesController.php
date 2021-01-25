@@ -7,10 +7,8 @@ use Illuminate\Support\Facades\DB;
 class CategoriesController extends Controller
 {
     public function getCategories(Request $request) {
-//        $projectId = $request->header('projectId');
         $productCategories = DB::table('product_categories')
-            ->orderBy('product_categories_order', 'desc')
-//            ->where('project_id', $projectId)
+            ->orderBy('product_categories_order', 'asc')
             ->select(['id', 'product_categories_name_ru', 'product_categories_parent_id', 'icon'])->get()->toArray();
         $categories = $this->getSubCategory($productCategories);
         return response()->json($categories);
