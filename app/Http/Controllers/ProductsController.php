@@ -62,7 +62,7 @@ class ProductsController extends Controller
                 foreach ($fromTo as $key => $item) {
                     $from = $item[0];
                     $to = $item[1];
-
+                    $y = [];
                     if (is_null($from) && !is_null($to)) {
                         if($b == 0){
                             $b++;
@@ -83,7 +83,9 @@ class ProductsController extends Controller
                         $y = DB::table('product_characteristics')->where('characteristic_id', $key)->whereBetween($column, [$from, $to])->whereIn('product_id', $y)->pluck('product_id');
                     }
                 }
-                $query = $query->whereIn('product_characteristics.product_id', $y);
+                if (count($y) > 0) {
+                    $query = $query->whereIn('product_characteristics.product_id', $y);
+                }
             }
 //            $query = $query->where(function ($q) use ($fromTo) {
 //                $column = 'product_characteristics.value';
@@ -124,14 +126,24 @@ class ProductsController extends Controller
             $checkboxes = $filterData['checkboxes'];
             if (!empty($checkboxes)) {
                 $a = 0;
+                $x = [];
                 foreach ($checkboxes as $key => $items) {
-                    if ($a == 0) {
-                        $a++;
-                        $x = DB::table('product_characteristics')->whereIn('attribute_id', $items)->groupBy('product_id')->pluck('product_id');
+                    $issetFilter = DB::table('product_characteristics')->where('characteristic_id', $key)->exists();
+                    if ($issetFilter) {
+                        if (!in_array(null, $items)) {
+                            if ($a == 0) {
+                                $a++;
+                                $x = DB::table('product_characteristics')->whereIn('attribute_id', $items)->groupBy('product_id')->pluck('product_id');
+                            }
+                            if (count($x) > 0) {
+                                $x = DB::table('product_characteristics')->whereIn('attribute_id', $items)->whereIn('product_id', $x)->pluck('product_id');
+                            }
+                        }
                     }
-                    $x = DB::table('product_characteristics')->whereIn('attribute_id', $items)->whereIn('product_id', $x)->pluck('product_id');
                 }
-                $query = $query->whereIn('products.id', $x);
+                if (count($x) > 0) {
+                    $query = $query->whereIn('products.id', $x);
+                }
             }
         }
 
