@@ -25,6 +25,7 @@ Route::get('getProduct/{productId}', 'ProductsController@getProduct');
 Route::get('getFilterData/{categoryId?}', 'ProductsController@getFilterData');
 Route::post('searchProduct', 'ProductsController@searchProduct');
 Route::get('newProducts', 'ProductsController@newProducts');
+Route::get('getBrands', 'ProductsController@getBrands');
 
 Route::post('checkout', 'FeedbackController@checkout');
 Route::post('oneClickOrder', 'FeedbackController@oneClickOrder');

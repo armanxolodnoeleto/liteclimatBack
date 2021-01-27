@@ -6,7 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 class ProductsController extends Controller
 {
-    public function getProducts(Request $request, $categoryId) {
+    public function getProducts(Request $request, $categoryId = null) {
         $projectId = $request->header('projectId');
         $data = [];
         $query = DB::table('prices')
@@ -25,9 +25,12 @@ class ProductsController extends Controller
         }
 
         $query = $query->where('prices.project_id', $projectId)
-            ->where('product_to_categories.category_id', $categoryId)
+//            ->where('product_to_categories.category_id', $categoryId)
             ->where('prices.status', 1)
             ->where('prices.price', '!=', 0);
+        if (!is_null($categoryId)) {
+            $query->where('product_to_categories.category_id', $categoryId);
+        }
 
         if ($request->has('manufacturerCountries')) {
             if (!$issetProductCharacteristic) {
@@ -290,6 +293,20 @@ class ProductsController extends Controller
             ->get();
 
         return response()->json($newProducts);
+    }
+
+    public function getBrands(Request $request) {
+        $projectId = $request->header('projectId');
+        $brands = DB::table('prices')
+            ->join('products', 'prices.product_id', '=', 'products.id', 'inner')
+            ->leftJoin('product_manufacturers', 'products.manufacturer_id', '=', 'product_manufacturers.id')
+            ->where('prices.project_id', $projectId)
+            ->where('prices.status', 1)
+            ->where('prices.price', '!=', 0)
+            ->select('product_manufacturers.id', 'product_manufacturers.name as brand', 'product_manufacturers.logo as brand_logo')
+            ->groupBy('product_manufacturers.id')
+            ->get();
+        return response()->json($brands);
     }
 
 }
