@@ -53,7 +53,7 @@ class FeedbackController extends Controller
             }
             $data['checkoutData'] = $checkoutData;
             $data['productsInfo'] = $productsInfo;
-            $theme = 'Заявка с корзины';
+            $theme = 'Заявка с корзины (Купить в 1 клик)';
 
             $mailSender = new MailService($projectId);
             $mailSender->sendMail($data, $theme, 'emails.order');
@@ -80,7 +80,11 @@ class FeedbackController extends Controller
         }
 
         if ($projectId == config('projects.lk')) {
-            $theme = 'Заявка с корзины (Купить в 1 клик)';
+            $isUnique = 'Y- ';
+            if ($request->has('is_unique')) {
+                $isUnique = 'Y+ ';
+            }
+            $theme = 'Не дозвонились '.$isUnique;
             $view = 'emails.oneClickOrder';
         }else {
             $theme = 'Заказ обратного звонка';
