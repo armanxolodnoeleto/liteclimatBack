@@ -57,13 +57,7 @@ class ProductsController extends Controller
                 if (count($fromTo) > 0 && !$issetProductCharacteristic) {
                     $query = $query->leftJoin('product_characteristics', 'prices.product_id', '=', 'product_characteristics.product_id');
                 }
-            }
-
-//            $query = $query->where(function ($q) use ($fromTo) {
                 $column = 'product_characteristics.value';
-                if (isset($fromTo['price'])) {
-                    unset($fromTo['price']);
-                }
                 $b = 0;
                 foreach ($fromTo as $key => $item) {
                     $from = $item[0];
@@ -88,9 +82,41 @@ class ProductsController extends Controller
                         }
                         $y = DB::table('product_characteristics')->where('characteristic_id', $key)->whereBetween($column, [$from, $to])->whereIn('product_id', $y)->pluck('product_id');
                     }
-//                    $this->getModeFilter($q, $from, $to, $column, $key);
                 }
-            $query = $query->whereIn('product_characteristics.product_id', $y);
+                $query = $query->whereIn('product_characteristics.product_id', $y);
+            }
+//            $query = $query->where(function ($q) use ($fromTo) {
+//                $column = 'product_characteristics.value';
+//                if (isset($fromTo['price'])) {
+//                    unset($fromTo['price']);
+//                }
+//                $b = 0;
+//                foreach ($fromTo as $key => $item) {
+//                    $from = $item[0];
+//                    $to = $item[1];
+//
+//                    if (is_null($from) && !is_null($to)) {
+//                        if($b == 0){
+//                            $b++;
+//                            $y = DB::table('product_characteristics')->where('characteristic_id', $key)->where($column, '<=', $to)->groupBy('product_id')->pluck('product_id');
+//                        }
+//                        $y = DB::table('product_characteristics')->where('characteristic_id', $key)->where($column, '<=', $to)->whereIn('product_id', $y)->pluck('product_id');
+//                    }elseif (!is_null($from) && is_null($to)) {
+//                        if($b == 0){
+//                            $b++;
+//                            $y = DB::table('product_characteristics')->where('characteristic_id', $key)->where($column, '>=', $from)->groupBy('product_id')->pluck('product_id');
+//                        }
+//                        $y = DB::table('product_characteristics')->where('characteristic_id', $key)->where($column, '>=', $from)->whereIn('product_id', $y)->pluck('product_id');
+//                    }elseif (!is_null($from) && !is_null($to)) {
+//                        if($b == 0){
+//                            $b++;
+//                            $y = DB::table('product_characteristics')->where('characteristic_id', $key)->whereBetween($column, [$from, $to])->groupBy('product_id')->pluck('product_id');
+//                        }
+//                        $y = DB::table('product_characteristics')->where('characteristic_id', $key)->whereBetween($column, [$from, $to])->whereIn('product_id', $y)->pluck('product_id');
+//                    }
+////                    $this->getModeFilter($q, $from, $to, $column, $key);
+//                }
+//                $query = $query->whereIn('product_characteristics.product_id', $y);
 //            });
         }
 
