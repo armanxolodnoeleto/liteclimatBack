@@ -254,4 +254,14 @@ class FeedbackController extends Controller
         }
     }
 
+    public function getServices() {
+        $services = DB::table('service_categories')
+            ->leftJoin('services', 'service_categories.id', 'services.service_category_id')
+            ->where('services.show', 1)
+            ->select('service_categories.id', 'service_categories.service_category_name_ru as service_category', DB::raw('CONCAT("[", GROUP_CONCAT(JSON_OBJECT( "service_name", services.service_name_ru, "service_price_our", service_price_our, "service_price_other", service_price_other)), "]") as services'))
+            ->groupBy('service_categories.id')
+            ->get();
+        return response()->json($services);
+    }
+
 }

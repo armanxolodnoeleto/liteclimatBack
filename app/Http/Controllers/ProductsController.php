@@ -87,39 +87,6 @@ class ProductsController extends Controller
                     $query = $query->whereIn('product_characteristics.product_id', $y);
                 }
             }
-//            $query = $query->where(function ($q) use ($fromTo) {
-//                $column = 'product_characteristics.value';
-//                if (isset($fromTo['price'])) {
-//                    unset($fromTo['price']);
-//                }
-//                $b = 0;
-//                foreach ($fromTo as $key => $item) {
-//                    $from = $item[0];
-//                    $to = $item[1];
-//
-//                    if (is_null($from) && !is_null($to)) {
-//                        if($b == 0){
-//                            $b++;
-//                            $y = DB::table('product_characteristics')->where('characteristic_id', $key)->where($column, '<=', $to)->groupBy('product_id')->pluck('product_id');
-//                        }
-//                        $y = DB::table('product_characteristics')->where('characteristic_id', $key)->where($column, '<=', $to)->whereIn('product_id', $y)->pluck('product_id');
-//                    }elseif (!is_null($from) && is_null($to)) {
-//                        if($b == 0){
-//                            $b++;
-//                            $y = DB::table('product_characteristics')->where('characteristic_id', $key)->where($column, '>=', $from)->groupBy('product_id')->pluck('product_id');
-//                        }
-//                        $y = DB::table('product_characteristics')->where('characteristic_id', $key)->where($column, '>=', $from)->whereIn('product_id', $y)->pluck('product_id');
-//                    }elseif (!is_null($from) && !is_null($to)) {
-//                        if($b == 0){
-//                            $b++;
-//                            $y = DB::table('product_characteristics')->where('characteristic_id', $key)->whereBetween($column, [$from, $to])->groupBy('product_id')->pluck('product_id');
-//                        }
-//                        $y = DB::table('product_characteristics')->where('characteristic_id', $key)->whereBetween($column, [$from, $to])->whereIn('product_id', $y)->pluck('product_id');
-//                    }
-////                    $this->getModeFilter($q, $from, $to, $column, $key);
-//                }
-//                $query = $query->whereIn('product_characteristics.product_id', $y);
-//            });
         }
 
         if ($request->has('checkboxes')) {
@@ -165,6 +132,7 @@ class ProductsController extends Controller
             ->whereIn('product_id', $productIds)
             ->where('product_characteristics.characteristic_id', 3)
             ->select('product_characteristics.product_id as id', 'characteristics.name_ru as characteristic_name_ru', 'characteristic_attributes.name_ru as characteristic_attribute_name')
+            ->orderBy('characteristic_attributes.id', 'ASC')
             ->get()->toArray();
 
         $data['products_info']['total'] = $products->total();
@@ -324,7 +292,7 @@ class ProductsController extends Controller
             ->where('prices.status', 1)
             ->where('product_series_photos.cover_photo',1)
             ->where('prices.price', '!=', 0)
-            ->select('products.id', 'products.name as model', 'product_manufacturers.name as brand', 'product_manufacturers.logo as brand_logo', DB::raw('CONCAT("[", GROUP_CONCAT(JSON_OBJECT( "cover_photo", product_series_photos.cover_photo,"series_picture_folder",  product_series_photos.folder, "series_picture_file_name", product_series_photos.file_name, "series_picture_format", product_series_photos.file_format)), "]") as cover_photo'), 'photos.folder as product_picture_folder','photos.file_name as product_picture_file_name', 'photos.file_format as product_picture_format', 'prices.price')
+            ->select('products.id', 'products.name as model', 'product_manufacturers.name as brand', 'product_manufacturers.logo as brand_logo', DB::raw('CONCAT("[", GROUP_CONCAT(JSON_OBJECT( "cover_photo", product_series_photos.cover_photo,"series_picture_folder",  product_series_photos.folder, "series_picture_file_name", product_series_photos.file_name, "series_picture_format", product_series_photos.file_format)), "]") as cover_photo'), 'photos.folder as product_picture_folder','photos.file_name as product_picture_file_name', 'photos.file_format as product_picture_format', 'prices.price', 'prices.has_chat', 'prices.has_sale', 'prices.price_with_setup', 'prices.price_without_setup', 'prices.chat_with_percent', 'prices.chat_without_percent')
             ->groupBy('products.id')
             ->orderByDesc('prices.product_id')
             ->take(6)

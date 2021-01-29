@@ -34,3 +34,4 @@ Route::post('review', 'FeedbackController@review');
 Route::get('getReviews', 'FeedbackController@getReviews');
 
 Route::post('chatFeedBack', 'FeedbackController@chatFeedBack');
+Route::get('getServices', 'FeedbackController@getServices');
