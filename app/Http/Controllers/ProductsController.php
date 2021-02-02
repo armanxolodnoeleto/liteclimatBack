@@ -303,21 +303,27 @@ class ProductsController extends Controller
 
     public function getBrands(Request $request) {
         $projectId = $request->header('projectId');
+        $data = [];
         $brands = DB::table('prices')
             ->join('products', 'prices.product_id', '=', 'products.id', 'inner')
             ->leftJoin('product_manufacturers', 'products.manufacturer_id', '=', 'product_manufacturers.id')
             ->where('prices.project_id', $projectId)
             ->where('prices.status', 1)
-            ->where('prices.price', '!=', 0)
-            ->select('product_manufacturers.id', 'product_manufacturers.name as brand', 'product_manufacturers.logo as brand_logo', DB::raw('COUNT(prices.product_id) as product_count'))
-            ->groupBy('product_manufacturers.id');
+            ->where('prices.price', '!=', 0);
 
-        if ($request->has('landingPage')) {
-            $brands = $brands->take(10)->get();
-        }else {
-            $brands = $brands->get();
+        if ($request->has('searchBrand')) {
+            $searchBrand = $request->get('searchBrand');
+            $brands = $brands->where('product_manufacturers.name', 'LIKE', "{$searchBrand}%");
         }
-        return response()->json($brands);
+
+        $brands = $brands->select('product_manufacturers.id', 'product_manufacturers.name as brand', 'product_manufacturers.logo as brand_logo', DB::raw('COUNT(prices.product_id) as product_count'))
+            ->groupBy('product_manufacturers.id')
+            ->paginate(10);
+
+        $data['brands'] = $brands->items();
+        $data['total'] = $brands->total();
+
+        return response()->json($data);
     }
 
 }
