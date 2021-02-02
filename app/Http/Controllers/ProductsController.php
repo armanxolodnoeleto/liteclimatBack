@@ -200,7 +200,7 @@ class ProductsController extends Controller
             ->where('prices.status', 1)
             ->where('prices.price', '!=', 0)
 
-            ->select(DB::raw('COUNT(prices.product_id) as count'), 'product_manufacturers.logo', 'product_manufacturers.id')
+            ->select(DB::raw('COUNT(prices.product_id) as count'), 'product_manufacturers.logo', 'product_manufacturers.name as brand', 'product_manufacturers.id')
             ->groupBy('product_manufacturers.id')
             ->orderBy('product_manufacturers.name', 'ASC')
             ->get();
