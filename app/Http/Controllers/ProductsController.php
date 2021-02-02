@@ -313,7 +313,11 @@ class ProductsController extends Controller
 
         if ($request->has('searchBrand')) {
             $searchBrand = $request->get('searchBrand');
-            $brands = $brands->where('product_manufacturers.name', 'LIKE', "{$searchBrand}%");
+            $brands = $brands->where(function ($query) use ($searchBrand) {
+                for ($i = 0; $i < count($searchBrand); $i++){
+                    $query->where('product_manufacturers.name', 'LIKE', "{$searchBrand[$i]}%");
+                }
+            });
         }
 
         $brands = $brands->select('product_manufacturers.id', 'product_manufacturers.name as brand', 'product_manufacturers.logo as brand_logo', DB::raw('COUNT(prices.product_id) as product_count'))
