@@ -313,9 +313,10 @@ class ProductsController extends Controller
 
         if ($request->has('searchBrand')) {
             $searchBrand = $request->get('searchBrand');
+            $searchBrand = str_split($searchBrand);
             $brands = $brands->where(function ($query) use ($searchBrand) {
                 for ($i = 0; $i < count($searchBrand); $i++){
-                    $query->where('product_manufacturers.name', 'LIKE', "{$searchBrand[$i]}%");
+                    $query->orWhere('product_manufacturers.name', 'LIKE', "{$searchBrand[$i]}%");
                 }
             });
         }
