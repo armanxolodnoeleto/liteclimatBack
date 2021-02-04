@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use http\Cookie;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -26,7 +27,6 @@ class ProductsController extends Controller
         }
 
         $query = $query->where('prices.project_id', $projectId)
-//            ->where('product_to_categories.category_id', $categoryId)
             ->where('prices.status', 1)
             ->where('prices.price', '!=', 0);
         if (!is_null($categoryId)) {
@@ -39,7 +39,6 @@ class ProductsController extends Controller
                 $issetProductCharacteristic = true;
             }
             $query = $query->whereIn('product_manufacturers.id', $request->manufacturerCountries);
-//            $query = $query->where('product_characteristics.characteristic_id', '=', 14);
         }
 
         if ($request->has('fromTo')) {
@@ -145,6 +144,33 @@ class ProductsController extends Controller
     public function getProduct(Request $request, $productId) {
         $projectId = $request->header('projectId');
         $data = [];
+
+        if ($request->has('attribute')) {
+            $characteristicAttr = $request->get('attribute');
+            $productSeriesId = DB::table('products')
+                ->where('id', $productId)
+                ->select('series_id')
+                ->first();
+
+            if (!is_null($productSeriesId) && !is_null($productSeriesId->series_id)) {
+                $likeProductIds = DB::table('products')
+                    ->where('series_id', $productSeriesId->series_id)
+                    ->pluck('id');
+
+                $likeProductId = DB::table('product_characteristics')
+                    ->where('attribute_id', $characteristicAttr)
+                    ->where('characteristic_id', 3)
+                    ->whereIn('product_id', $likeProductIds)
+                    ->select('product_id')
+                    ->first();
+
+                if (!is_null($likeProductId) && !is_null($likeProductId->product_id)) {
+                    $productId = $likeProductId->product_id;
+                }
+            }
+
+        }
+        
         $product = DB::table('products')
             ->join('prices', 'products.id', '=', 'prices.product_id', "inner")
             ->leftJoin('product_manufacturers', 'products.manufacturer_id', '=', 'product_manufacturers.id')
@@ -220,7 +246,6 @@ class ProductsController extends Controller
             ->leftJoin('characteristic_attributes', 'characteristic_to_categories.characteristic_id', '=', 'characteristic_attributes.characteristic_id')
             ->leftJoin('characteristics', 'characteristic_attributes.characteristic_id', '=', 'characteristics.id')
             ->leftJoin('value_types', 'characteristics.value_type_id', '=', 'value_types.id')
-//            ->where('product_categories.project_id', $projectId)
             ->where('characteristic_to_categories.category_id', $categoryId)
             ->select('characteristic_attributes.name_ru', 'characteristic_attributes.id', 'characteristic_attributes.characteristic_id', 'characteristics.name_ru as title', 'value_types.name')
             ->groupBy('characteristic_attributes.id')
@@ -347,7 +372,9 @@ class ProductsController extends Controller
         $certificates = DB::table('product_manufacturers')
             ->leftJoin('product_manufacturer_certificates', 'product_manufacturers.id', 'product_manufacturer_certificates.product_manufacturer_id')
             ->where('product_manufacturer_certificates.project_id', $projectId)
-            ->select('product_manufacturers.name', 'product_manufacturers.logo', 'product_manufacturer_certificates.file_name')
+            ->whereNotNull('product_manufacturers.logo')
+            ->select('product_manufacturers.id', 'product_manufacturers.name', 'product_manufacturers.logo', 'product_manufacturer_certificates.file_name')
+            ->groupBy('product_manufacturers.id')
             ->get();
 
         return response()->json($certificates);
