@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use http\Cookie;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
 class ProductsController extends Controller
@@ -143,34 +143,9 @@ class ProductsController extends Controller
 
     public function getProduct(Request $request, $productId) {
         $projectId = $request->header('projectId');
+        $characteristicId = 3;
         $data = [];
 
-        if ($request->has('attribute')) {
-            $characteristicAttr = $request->get('attribute');
-            $productSeriesId = DB::table('products')
-                ->where('id', $productId)
-                ->select('series_id')
-                ->first();
-
-            if (!is_null($productSeriesId) && !is_null($productSeriesId->series_id)) {
-                $likeProductIds = DB::table('products')
-                    ->where('series_id', $productSeriesId->series_id)
-                    ->pluck('id');
-
-                $likeProductId = DB::table('product_characteristics')
-                    ->where('attribute_id', $characteristicAttr)
-                    ->where('characteristic_id', 3)
-                    ->whereIn('product_id', $likeProductIds)
-                    ->select('product_id')
-                    ->first();
-
-                if (!is_null($likeProductId) && !is_null($likeProductId->product_id)) {
-                    $productId = $likeProductId->product_id;
-                }
-            }
-
-        }
-        
         $product = DB::table('products')
             ->join('prices', 'products.id', '=', 'prices.product_id', "inner")
             ->leftJoin('product_manufacturers', 'products.manufacturer_id', '=', 'product_manufacturers.id')
@@ -215,12 +190,50 @@ class ProductsController extends Controller
                 ->get()->toArray();
         }
 
+//        Cache::forget('product_filter');
+        if (!Cache::has('product_filter')) {
+            $filter = $this->getProductFilter($characteristicId, $productId);
+            Cache::put('product_filter', $filter);
+        }else {
+            $filter = Cache::get('product_filter');
+        }
+
         $data['product'] = $product;
         $data['characteristics'] = $characteristics;
         $data['photos'] = $photos;
         $data['certificate'] = $certificate;
+        $data['filter'] = $filter;
 
         return response()->json($data);
+    }
+
+    private function getProductFilter($characteristicId, $productId, $characteristicAttr = null) {
+        $productSeriesId = DB::table('products')
+            ->where('id', $productId)
+            ->select('series_id')
+            ->first();
+
+        if (!is_null($productSeriesId) && !is_null($productSeriesId->series_id)) {
+            $likeProductIds = DB::table('products')
+                ->where('series_id', $productSeriesId->series_id)
+                ->pluck('id');
+
+            $likeProductId = DB::table('product_characteristics')
+                ->where('characteristic_id', $characteristicId);
+
+            if (!is_null($characteristicAttr)) {
+                $likeProductId = $likeProductId->where('attribute_id', $characteristicAttr);
+            }
+            $likeProductId = $likeProductId->whereIn('product_id', $likeProductIds)
+                ->select('product_id', 'characteristic_id', 'attribute_id')
+                ->distinct()
+                ->get();
+
+            if (!empty($likeProductId)) {
+                return $likeProductId;
+            }
+        }
+        return false;
     }
 
     public function getFilterData(Request $request, $categoryId) {
