@@ -342,4 +342,15 @@ class ProductsController extends Controller
         return response()->json($data);
     }
 
+    public function getCertificates(Request $request) {
+        $projectId = $request->header('projectId');
+        $certificates = DB::table('product_manufacturers')
+            ->leftJoin('product_manufacturer_certificates', 'product_manufacturers.id', 'product_manufacturer_certificates.product_manufacturer_id')
+            ->where('product_manufacturer_certificates.project_id', $projectId)
+            ->select('product_manufacturers.name', 'product_manufacturers.logo', 'product_manufacturer_certificates.file_name')
+            ->get();
+
+        return response()->json($certificates);
+    }
+
 }
