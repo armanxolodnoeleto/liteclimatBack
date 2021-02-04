@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+
 class ProductsController extends Controller
 {
     public function getProducts(Request $request, $categoryId = null) {
@@ -17,7 +18,7 @@ class ProductsController extends Controller
             ->leftJoin('product_series_photos', 'product_series.id', '=', 'product_series_photos.series_id')
             ->leftJoin('photos', 'products.id', '=', 'photos.product_id');
 
-        $filterData = $request->except('manufacturerCountries', 'utm_campaign', 'utm_source', 'utm_medium', 'utm_content', 'utm_term', 'yclid');
+        $filterData = $request->except('manufacturerCountries', 'utm_campaign', 'utm_source', 'utm_medium', 'utm_content', 'utm_term', 'yclid', '/api/getProducts');
         $issetProductCharacteristic = false;
         if ($request->has('checkboxes')) {
             $query = $query->leftJoin('product_characteristics', 'prices.product_id', '=', 'product_characteristics.product_id');
@@ -138,7 +139,6 @@ class ProductsController extends Controller
         $data['products_info']['total'] = $products->total();
         $data['products_info']['characteristics'] = $characteristics;
         $data['products'] = $products->items();
-
         return response()->json($data);
     }
 
@@ -148,15 +148,25 @@ class ProductsController extends Controller
         $product = DB::table('products')
             ->join('prices', 'products.id', '=', 'prices.product_id', "inner")
             ->leftJoin('product_manufacturers', 'products.manufacturer_id', '=', 'product_manufacturers.id')
-            ->leftJoin('product_manufacturer_certificates', 'product_manufacturers.id', '=', 'product_manufacturer_certificates.product_manufacturer_id')
             ->leftJoin('product_series', 'products.series_id', '=', 'product_series.id')
             ->leftJoin('product_categories', 'product_series.category_id', '=', 'product_categories.id')
             ->leftJoin('product_series_photos', 'product_series.id', '=', 'product_series_photos.series_id')
             ->where('prices.project_id', $projectId)
             ->where('products.id', $productId)
-            ->select('products.name as model', 'products.id as articule', 'products.manufacturer_id', 'products.description_ru as description', 'prices.market', 'prices.setup_price', 'prices.price', 'prices.has_chat', 'prices.has_sale', 'prices.price_with_setup', 'prices.price_without_setup', 'prices.chat_with_percent', 'prices.chat_without_percent', 'product_manufacturers.name as brand', 'product_manufacturers.logo as manufacturer_logo','product_manufacturer_certificates.file_name as certificate_file_name', 'product_series.series_name_ru as series_name', 'product_series.id as series_id', 'product_categories.product_categories_name_ru as category_name', 'product_categories.id as category_id', 'products.available')
+            ->select('products.name as model', 'products.id as articule', 'products.description_ru as description', 'prices.market', 'prices.setup_price', 'prices.price', 'prices.has_chat', 'prices.has_sale', 'prices.price_with_setup', 'prices.price_without_setup', 'prices.chat_with_percent', 'prices.chat_without_percent', 'product_manufacturers.name as brand', 'product_manufacturers.id as manufacturer_id', 'product_manufacturers.logo as manufacturer_logo', 'product_series.series_name_ru as series_name', 'product_series.id as series_id', 'product_categories.product_categories_name_ru as category_name', 'product_categories.id as category_id', 'products.available')
             ->groupBy('products.id')
             ->first();
+
+        $certificate = [];
+        if (isset($product->manufacturer_id)) {
+            $manufacturerCertificate = $product->manufacturer_id;
+
+            $certificate = DB::table('product_manufacturer_certificates')
+                ->where('project_id', $projectId)
+                ->where('product_manufacturer_id', $manufacturerCertificate)
+                ->select('file_name as certificate_file_name')
+                ->first();
+        }
 
         $characteristics = DB::table('product_characteristics')
             ->leftJoin('characteristics as ch1', 'product_characteristics.characteristic_id', '=', 'ch1.id')
@@ -182,6 +192,7 @@ class ProductsController extends Controller
         $data['product'] = $product;
         $data['characteristics'] = $characteristics;
         $data['photos'] = $photos;
+        $data['certificate'] = $certificate;
 
         return response()->json($data);
     }
@@ -238,7 +249,7 @@ class ProductsController extends Controller
         $projectId = $request->header('projectId');
         $searchBy = $request->search;
 
-        $searchableColumns = ['products.id', 'products.name', 'product_manufacturers.name', 'product_series.series_name_ru'];
+        $searchableColumns = ['products.id', 'product_manufacturers.name', 'products.name', 'product_series.series_name_ru'];
 
         if ($searchBy) {
             $searchResponse = DB::table('prices')
