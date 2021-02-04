@@ -219,13 +219,14 @@ class ProductsController extends Controller
                 ->pluck('id');
 
             $likeProductId = DB::table('product_characteristics')
-                ->where('characteristic_id', $characteristicId);
+                ->where('product_characteristics.characteristic_id', $characteristicId);
 
             if (!is_null($characteristicAttr)) {
                 $likeProductId = $likeProductId->where('attribute_id', $characteristicAttr);
             }
             $likeProductId = $likeProductId->whereIn('product_id', $likeProductIds)
-                ->select('product_id', 'characteristic_id', 'attribute_id')
+                ->leftJoin('characteristic_attributes', 'product_characteristics.attribute_id', 'characteristic_attributes.id')
+                ->select('product_characteristics.product_id', 'product_characteristics.characteristic_id', 'product_characteristics.attribute_id', 'characteristic_attributes.name_ru')
                 ->distinct()
                 ->get();
 
