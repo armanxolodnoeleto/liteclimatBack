@@ -234,7 +234,7 @@ class ProductsController extends Controller
                 return $likeProductId;
             }
         }
-        return false;
+        return [];
     }
 
     public function getFilterData(Request $request, $categoryId) {
