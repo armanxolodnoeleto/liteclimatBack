@@ -190,10 +190,10 @@ class ProductsController extends Controller
                 ->get()->toArray();
         }
 
-        Cache::forget('product_filter');
+        Cache::flush();
         if (!Cache::has('filter_'. $productId)) {
             $filter = $this->getProductFilter($characteristicId, $productId);
-            Cache::put('filter_'. $productId, $filter);
+            Cache::put('filter_'. $productId, $filter, now()->addMinutes(10));
         }else {
             $filter = Cache::get('filter_'. $productId);
         }
@@ -227,8 +227,8 @@ class ProductsController extends Controller
             $likeProductId = $likeProductId->whereIn('product_id', $likeProductIds)
                 ->leftJoin('characteristic_attributes', 'product_characteristics.attribute_id', 'characteristic_attributes.id')
                 ->select('product_characteristics.product_id', 'product_characteristics.characteristic_id', 'product_characteristics.attribute_id', 'characteristic_attributes.name_ru')
-                ->distinct()
                 ->orderBy('product_characteristics.attribute_id', 'ASC')
+                ->distinct()
                 ->get();
 
             if (!empty($likeProductId)) {
