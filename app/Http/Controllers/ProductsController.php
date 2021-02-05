@@ -191,11 +191,11 @@ class ProductsController extends Controller
         }
 
 //        Cache::forget('product_filter');
-        if (!Cache::has('product_filter')) {
+        if (!Cache::has('filter_'. $productId)) {
             $filter = $this->getProductFilter($characteristicId, $productId);
-            Cache::put('product_filter', $filter);
+            Cache::put('filter_'. $productId, $filter);
         }else {
-            $filter = Cache::get('product_filter');
+            $filter = Cache::get('filter_'. $productId);
         }
 
         $data['product'] = $product;
@@ -239,6 +239,7 @@ class ProductsController extends Controller
 
     public function getFilterData(Request $request, $categoryId) {
         $projectId = $request->header('projectId');
+        $values = [1, 2, 4, 5, 47, 48, 49, 50, 51, 52, 53, 54];
         $data = [];
 
         $manufacturerCountries = DB::table('prices')
@@ -270,7 +271,7 @@ class ProductsController extends Controller
             ->leftJoin('product_characteristics', 'characteristic_to_categories.characteristic_id', '=', 'product_characteristics.characteristic_id')
             ->leftJoin('characteristics', 'product_characteristics.characteristic_id', '=', 'characteristics.id')
             ->where('characteristic_to_categories.category_id', $categoryId)
-            ->whereIn('product_characteristics.characteristic_id', [1, 2, 4, 5])
+            ->whereIn('product_characteristics.characteristic_id', $values)
             ->where('product_characteristics.attribute_id', null)
             ->select('characteristics.name_ru as title', 'characteristics.id')
             ->groupBy('characteristics.name_ru', 'characteristics.id')
