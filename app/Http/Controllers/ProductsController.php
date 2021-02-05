@@ -154,7 +154,7 @@ class ProductsController extends Controller
             ->leftJoin('product_series_photos', 'product_series.id', '=', 'product_series_photos.series_id')
             ->where('prices.project_id', $projectId)
             ->where('products.id', $productId)
-            ->select('products.name as model', 'products.id as articule', 'products.description_ru as description', 'prices.market', 'prices.setup_price', 'prices.price', 'prices.has_chat', 'prices.has_sale', 'prices.price_with_setup', 'prices.price_without_setup', 'prices.chat_with_percent', 'prices.chat_without_percent', 'product_manufacturers.name as brand', 'product_manufacturers.id as manufacturer_id', 'product_manufacturers.logo as manufacturer_logo', 'product_series.series_name_ru as series_name', 'product_series.id as series_id', 'product_categories.product_categories_name_ru as category_name', 'product_categories.id as category_id', 'products.available')
+            ->select('products.name as model', 'products.id as articule', 'prices.market', 'prices.setup_price', 'prices.price', 'prices.has_chat', 'prices.has_sale', 'prices.price_with_setup', 'prices.price_without_setup', 'prices.chat_with_percent', 'prices.chat_without_percent', 'product_manufacturers.name as brand', 'product_manufacturers.id as manufacturer_id', 'product_manufacturers.logo as manufacturer_logo', 'product_series.series_name_ru as series_name', 'product_series.id as series_id', 'product_series.series_description_ru as description', 'product_categories.product_categories_name_ru as category_name', 'product_categories.id as category_id', 'products.available')
             ->groupBy('products.id')
             ->first();
 
