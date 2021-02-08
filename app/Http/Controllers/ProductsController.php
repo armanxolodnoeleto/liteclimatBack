@@ -274,7 +274,7 @@ class ProductsController extends Controller
             ->orderBy('product_manufacturers.name', 'ASC')
             ->get();
 
-
+        $characteristicIds = [];
         if ($request->has('checkboxes')) {
             $checkboxIds = $request->checkboxes;
             $checkboxesProducts = $this->checkboxesProducts($checkboxIds, true);
