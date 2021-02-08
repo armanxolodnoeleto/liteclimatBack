@@ -59,10 +59,10 @@ class ProductsController extends Controller
                 }
                 $column = 'product_characteristics.value';
                 $b = 0;
+                $y = [];
                 foreach ($fromTo as $key => $item) {
                     $from = $item[0];
                     $to = $item[1];
-                    $y = [];
                     if (is_null($from) && !is_null($to)) {
                         if($b == 0){
                             $b++;
@@ -83,35 +83,17 @@ class ProductsController extends Controller
                         $y = DB::table('product_characteristics')->where('characteristic_id', $key)->whereBetween($column, [$from, $to])->whereIn('product_id', $y)->pluck('product_id');
                     }
                 }
-                if (count($y) > 0) {
-                    $query = $query->whereIn('product_characteristics.product_id', $y);
-                }
+                $query = $query->whereIn('product_characteristics.product_id', $y);
             }
         }
 
         if ($request->has('checkboxes')) {
             $checkboxes = $filterData['checkboxes'];
+            $checkboxProducts = [];
             if (!empty($checkboxes)) {
-                $a = 0;
-                $x = [];
-                foreach ($checkboxes as $key => $items) {
-                    $issetFilter = DB::table('product_characteristics')->where('characteristic_id', $key)->exists();
-                    if ($issetFilter) {
-                        if (!in_array(null, $items)) {
-                            if ($a == 0) {
-                                $a++;
-                                $x = DB::table('product_characteristics')->whereIn('attribute_id', $items)->groupBy('product_id')->pluck('product_id');
-                            }
-                            if (count($x) > 0) {
-                                $x = DB::table('product_characteristics')->whereIn('attribute_id', $items)->whereIn('product_id', $x)->pluck('product_id');
-                            }
-                        }
-                    }
-                }
-                if (count($x) > 0) {
-                    $query = $query->whereIn('products.id', $x);
-                }
+                $checkboxProducts = $this->checkboxesProducts($checkboxes);
             }
+            $query = $query->whereIn('products.id', $checkboxProducts);
         }
 
         $query = $query->select('products.id', 'products.manufacturer_id', 'products.name as model', 'product_manufacturers.name as brand', 'product_manufacturers.logo as brand_logo', 'product_series.series_name_ru as series_name', DB::raw('CONCAT("[", GROUP_CONCAT(JSON_OBJECT( "cover_photo", product_series_photos.cover_photo,"series_picture_folder",  product_series_photos.folder, "series_picture_file_name", product_series_photos.file_name, "series_picture_format", product_series_photos.file_format)), "]") as cover_photo'), 'photos.folder as product_picture_folder','photos.file_name as product_picture_file_name', 'photos.file_format as product_picture_format', 'prices.price', 'prices.setup_price', 'prices.has_chat', 'prices.has_sale', 'prices.price_with_setup', 'prices.price_without_setup', 'prices.chat_with_percent', 'prices.chat_without_percent', 'products.available')
@@ -139,6 +121,40 @@ class ProductsController extends Controller
         $data['products_info']['characteristics'] = $characteristics;
         $data['products'] = $products->items();
         return response()->json($data);
+    }
+
+    private function checkboxesProducts($checkboxes, $filterUpdate = false) {
+        $a = 0;
+        $productIds = [];
+        foreach ($checkboxes as $key => $items) {
+            $issetFilter = DB::table('product_characteristics')->where('characteristic_id', $key)->exists();
+            if ($issetFilter) {
+                if (!in_array(null, $items)) {
+                    if ($a == 0) {
+                        $a++;
+                        if ($filterUpdate) {
+                            $productIds = DB::table('product_characteristics')
+                                ->where('characteristic_id', $key)
+                                ->whereIn('attribute_id', $items)
+                                ->groupBy('product_id')
+                                ->pluck('product_id');
+                        }else {
+                            $productIds = DB::table('product_characteristics')
+                                ->whereIn('attribute_id', $items)
+                                ->groupBy('product_id')
+                                ->pluck('product_id');
+                        }
+                    }
+                    if (count($productIds) > 0) {
+                        $productIds = DB::table('product_characteristics')
+                            ->whereIn('attribute_id', $items)
+                            ->whereIn('product_id', $productIds)
+                            ->pluck('product_id');
+                    }
+                }
+            }
+        }
+        return $productIds;
     }
 
     public function getProduct(Request $request, $productId) {
@@ -190,7 +206,7 @@ class ProductsController extends Controller
                 ->get()->toArray();
         }
 
-        Cache::flush();
+//        Cache::flush();
         if (!Cache::has('filter_'. $productId)) {
             $filter = $this->getProductFilter($characteristicId, $productId);
             Cache::put('filter_'. $productId, $filter, now()->addMinutes(10));
@@ -258,12 +274,33 @@ class ProductsController extends Controller
             ->orderBy('product_manufacturers.name', 'ASC')
             ->get();
 
+
+        if ($request->has('checkboxes')) {
+            $checkboxIds = $request->checkboxes;
+            $checkboxesProducts = $this->checkboxesProducts($checkboxIds, true);
+            if (count($checkboxesProducts) > 0) {
+                $characteristicIds = DB::table('product_characteristics')
+                    ->whereIn('product_id', $checkboxesProducts)
+                    ->groupBy('characteristic_id')
+                    ->pluck('characteristic_id')
+                    ->toArray();
+            }else {
+                $characteristicIds = array_keys($request->checkboxes);
+            }
+        }
+
         $characteristicAttributes = DB::table('characteristic_to_categories')
             ->leftJoin('characteristic_attributes', 'characteristic_to_categories.characteristic_id', '=', 'characteristic_attributes.characteristic_id')
             ->leftJoin('characteristics', 'characteristic_attributes.characteristic_id', '=', 'characteristics.id')
             ->leftJoin('value_types', 'characteristics.value_type_id', '=', 'value_types.id')
-            ->where('characteristic_to_categories.category_id', $categoryId)
-            ->select('characteristic_attributes.name_ru', 'characteristic_attributes.id', 'characteristic_attributes.characteristic_id', 'characteristics.name_ru as title', 'value_types.name')
+            ->where('characteristic_to_categories.category_id', $categoryId);
+
+        if (count($characteristicIds) > 0) {
+            $characteristicAttributes = $characteristicAttributes->whereIn('characteristic_to_categories.characteristic_id', $characteristicIds);
+            $values = array_intersect($characteristicIds, $values);
+        }
+
+        $characteristicAttributes = $characteristicAttributes->select('characteristic_attributes.name_ru', 'characteristic_attributes.id', 'characteristic_attributes.characteristic_id', 'characteristics.name_ru as title', 'value_types.name')
             ->groupBy('characteristic_attributes.id')
             ->orderBy('characteristic_attributes.name_ru', 'ASC')
             ->get();
