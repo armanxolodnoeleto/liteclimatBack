@@ -251,8 +251,8 @@ class ProductsController extends Controller
             $likeProductId = $likeProductId->whereIn('product_id', $likeProductIds)
                 ->leftJoin('characteristic_attributes', 'product_characteristics.attribute_id', 'characteristic_attributes.id')
                 ->select('product_characteristics.product_id', 'product_characteristics.characteristic_id', 'product_characteristics.attribute_id', 'characteristic_attributes.name_ru')
+                ->groupBy('product_characteristics.attribute_id')
                 ->orderBy('product_characteristics.attribute_id', 'ASC')
-                ->distinct()
                 ->get();
 
             if (!empty($likeProductId)) {
