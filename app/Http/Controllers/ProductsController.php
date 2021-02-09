@@ -57,40 +57,18 @@ class ProductsController extends Controller
                 if (count($fromTo) > 0 && !$issetProductCharacteristic) {
                     $query = $query->leftJoin('product_characteristics', 'prices.product_id', '=', 'product_characteristics.product_id');
                 }
-                $column = 'product_characteristics.value';
-                $b = 0;
-                $y = [];
-                foreach ($fromTo as $key => $item) {
-                    $from = $item[0];
-                    $to = $item[1];
-                    if (is_null($from) && !is_null($to)) {
-                        if($b == 0){
-                            $b++;
-                            $y = DB::table('product_characteristics')->where('characteristic_id', $key)->where($column, '<=', $to)->groupBy('product_id')->pluck('product_id');
-                        }
-                        $y = DB::table('product_characteristics')->where('characteristic_id', $key)->where($column, '<=', $to)->whereIn('product_id', $y)->pluck('product_id');
-                    }elseif (!is_null($from) && is_null($to)) {
-                        if($b == 0){
-                            $b++;
-                            $y = DB::table('product_characteristics')->where('characteristic_id', $key)->where($column, '>=', $from)->groupBy('product_id')->pluck('product_id');
-                        }
-                        $y = DB::table('product_characteristics')->where('characteristic_id', $key)->where($column, '>=', $from)->whereIn('product_id', $y)->pluck('product_id');
-                    }elseif (!is_null($from) && !is_null($to)) {
-                        if($b == 0){
-                            $b++;
-                            $y = DB::table('product_characteristics')->where('characteristic_id', $key)->whereBetween($column, [$from, $to])->groupBy('product_id')->pluck('product_id');
-                        }
-                        $y = DB::table('product_characteristics')->where('characteristic_id', $key)->whereBetween($column, [$from, $to])->whereIn('product_id', $y)->pluck('product_id');
-                    }
+                $valueProducts = [];
+                if (count($fromTo) > 0) {
+                    $valueProducts = $this->valuesProducts($fromTo);
                 }
-                $query = $query->whereIn('product_characteristics.product_id', $y);
+                $query = $query->whereIn('product_characteristics.product_id', $valueProducts);
             }
         }
 
         if ($request->has('checkboxes')) {
             $checkboxes = $filterData['checkboxes'];
             $checkboxProducts = [];
-            if (!empty($checkboxes)) {
+            if (count($checkboxes) > 0) {
                 $checkboxProducts = $this->checkboxesProducts($checkboxes);
             }
             $query = $query->whereIn('products.id', $checkboxProducts);
@@ -121,6 +99,36 @@ class ProductsController extends Controller
         $data['products_info']['characteristics'] = $characteristics;
         $data['products'] = $products->items();
         return response()->json($data);
+    }
+
+    private function valuesProducts($fromTo) {
+        $column = 'product_characteristics.value';
+        $productIds = [];
+        $b = 0;
+        foreach ($fromTo as $key => $item) {
+            $from = $item[0];
+            $to = $item[1];
+            if (is_null($from) && !is_null($to)) {
+                if($b == 0){
+                    $b++;
+                    $productIds = DB::table('product_characteristics')->where('characteristic_id', $key)->where($column, '<=', $to)->groupBy('product_id')->pluck('product_id');
+                }
+                $productIds = DB::table('product_characteristics')->where('characteristic_id', $key)->where($column, '<=', $to)->whereIn('product_id', $productIds)->pluck('product_id');
+            }elseif (!is_null($from) && is_null($to)) {
+                if($b == 0){
+                    $b++;
+                    $productIds = DB::table('product_characteristics')->where('characteristic_id', $key)->where($column, '>=', $from)->groupBy('product_id')->pluck('product_id');
+                }
+                $productIds = DB::table('product_characteristics')->where('characteristic_id', $key)->where($column, '>=', $from)->whereIn('product_id', $productIds)->pluck('product_id');
+            }elseif (!is_null($from) && !is_null($to)) {
+                if($b == 0){
+                    $b++;
+                    $productIds = DB::table('product_characteristics')->where('characteristic_id', $key)->whereBetween($column, [$from, $to])->groupBy('product_id')->pluck('product_id');
+                }
+                $productIds = DB::table('product_characteristics')->where('characteristic_id', $key)->whereBetween($column, [$from, $to])->whereIn('product_id', $productIds)->pluck('product_id');
+            }
+        }
+        return $productIds;
     }
 
     private function checkboxesProducts($checkboxes, $filterUpdate = false) {
@@ -289,15 +297,31 @@ class ProductsController extends Controller
             }
         }
 
+        $characteristicValueIds = [];
+        if ($request->has('fromTo')) {
+            $valueIds = $request->fromTo;
+            $valueProducts = $this->valuesProducts($valueIds);
+            if (count($valueProducts) > 0) {
+                $characteristicValueIds = DB::table('product_characteristics')
+                    ->whereIn('product_id', $valueProducts)
+                    ->groupBy('characteristic_id')
+                    ->pluck('characteristic_id')
+                    ->toArray();
+            }else {
+                $characteristicValueIds = array_keys($request->fromTo);
+            }
+        }
+
         $characteristicAttributes = DB::table('characteristic_to_categories')
             ->leftJoin('characteristic_attributes', 'characteristic_to_categories.characteristic_id', '=', 'characteristic_attributes.characteristic_id')
             ->leftJoin('characteristics', 'characteristic_attributes.characteristic_id', '=', 'characteristics.id')
             ->leftJoin('value_types', 'characteristics.value_type_id', '=', 'value_types.id')
             ->where('characteristic_to_categories.category_id', $categoryId);
 
-        if (count($characteristicIds) > 0) {
-            $characteristicAttributes = $characteristicAttributes->whereIn('characteristic_to_categories.characteristic_id', $characteristicIds);
-            $values = array_intersect($characteristicIds, $values);
+        if (count($characteristicIds) > 0 || count($characteristicValueIds) > 0) {
+            $characteristics = array_unique(array_merge($characteristicIds, $characteristicValueIds));
+            $characteristicAttributes = $characteristicAttributes->whereIn('characteristic_to_categories.characteristic_id', $characteristics);
+            $values = array_intersect($characteristics, $values);
         }
 
         $characteristicAttributes = $characteristicAttributes->select('characteristic_attributes.name_ru', 'characteristic_attributes.id', 'characteristic_attributes.characteristic_id', 'characteristics.name_ru as title', 'value_types.name')
@@ -327,7 +351,8 @@ class ProductsController extends Controller
         $projectId = $request->header('projectId');
         $searchBy = $request->search;
 
-        $searchableColumns = ['products.id', 'product_manufacturers.name', 'products.name', 'product_series.series_name_ru'];
+//        $searchableColumns = ['products.id', 'product_manufacturers.name', 'products.name', 'product_series.series_name_ru'];
+        $searchableColumns = ['products.full_name_ru', 'products.full_name_am', 'products.full_name_en'];
 
         if ($searchBy) {
             $searchResponse = DB::table('prices')
