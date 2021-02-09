@@ -345,7 +345,7 @@ class ProductsController extends Controller
         foreach ($textFilters as $key => $textFilter) {
             if (in_array($textFilter->id, $dimensionIds)) {
                 if (!$isDimension) {
-                    $dimensions['title'] = 'Габыриты';
+                    $dimensions['title'] = 'Габариты';
                     $dimensions['type'] = 'group';
                     $isDimension = true;
                 }
