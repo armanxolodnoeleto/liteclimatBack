@@ -339,6 +339,15 @@ class ProductsController extends Controller
             ->groupBy('characteristics.name_ru', 'characteristics.id')
             ->get();
 
+        $dimensionIds = [47, 48, 49, 50, 51, 52, 53, 54];
+        $dimensions = [];
+        foreach ($textFilters as $key => $textFilter) {
+            if (in_array($textFilter->id, $dimensionIds)) {
+                $dimensions[] = $textFilter;
+                unset($textFilters[$key]);
+            }
+        }
+        $textFilters['Габариты'] = $dimensions;
 
         $data['manufacturerCountries'] = $manufacturerCountries;
         $data['characteristicAttributes'] = $characteristicAttributes;
@@ -351,7 +360,6 @@ class ProductsController extends Controller
         $projectId = $request->header('projectId');
         $searchBy = $request->search;
 
-//        $searchableColumns = ['products.id', 'product_manufacturers.name', 'products.name', 'product_series.series_name_ru'];
         $searchableColumns = ['products.full_name_ru', 'products.full_name_am', 'products.full_name_en'];
 
         if ($searchBy) {
@@ -365,6 +373,7 @@ class ProductsController extends Controller
                 ->where('prices.status', 1)
                 ->where('prices.price', '!=', 0)
                 ->where(function($q) use ($searchableColumns, $searchBy) {
+//                    $searchBy = implode("|", explode(" ", $searchBy));
                     foreach ($searchableColumns as $searchableColumn) {
                         $q->orWhere($searchableColumn, 'LIKE', "%{$searchBy}%");
                     }
