@@ -341,13 +341,19 @@ class ProductsController extends Controller
 
         $dimensionIds = [47, 48, 49, 50, 51, 52, 53, 54];
         $dimensions = [];
+        $isDimension = false;
         foreach ($textFilters as $key => $textFilter) {
             if (in_array($textFilter->id, $dimensionIds)) {
-                $dimensions[] = $textFilter;
+                if (!$isDimension) {
+                    $dimensions['title'] = 'Габыриты';
+                    $dimensions['type'] = 'group';
+                    $isDimension = true;
+                }
+                $dimensions['filters'][] = $textFilter;
                 unset($textFilters[$key]);
             }
         }
-        $textFilters['Габариты'] = $dimensions;
+        $textFilters[] = $dimensions;
 
         $data['manufacturerCountries'] = $manufacturerCountries;
         $data['characteristicAttributes'] = $characteristicAttributes;
