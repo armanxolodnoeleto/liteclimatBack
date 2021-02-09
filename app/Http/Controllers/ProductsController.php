@@ -362,7 +362,7 @@ class ProductsController extends Controller
         return response()->json($data);
     }
 
-    public function searchProduct(Request $request) {
+    public function searchProduct(Request $request, $categoryId = null) {
         $projectId = $request->header('projectId');
         $searchBy = $request->search;
 
@@ -370,16 +370,22 @@ class ProductsController extends Controller
 
         if ($searchBy) {
             $searchResponse = DB::table('prices')
-                ->leftJoin('products', 'prices.product_id', '=', 'products.id')
+                ->join('product_to_categories', 'prices.product_id', '=', 'product_to_categories.product_id', 'inner')
+                ->leftJoin('products', 'product_to_categories.product_id', '=', 'products.id')
+//                ->leftJoin('products', 'prices.product_id', '=', 'products.id')
                 ->leftJoin('product_manufacturers', 'products.manufacturer_id', '=', 'product_manufacturers.id')
                 ->leftJoin('product_series', 'products.series_id', '=', 'product_series.id')
                 ->leftJoin('product_series_photos', 'product_series.id', '=', 'product_series_photos.series_id')
-                ->leftJoin('photos', 'products.id', '=', 'photos.product_id')
-                ->where('prices.project_id', $projectId)
+                ->leftJoin('photos', 'products.id', '=', 'photos.product_id');
+
+            if (!is_null($categoryId)) {
+                $searchResponse = $searchResponse->where('product_to_categories.category_id', $categoryId);
+            }
+
+            $searchResponse = $searchResponse->where('prices.project_id', $projectId)
                 ->where('prices.status', 1)
                 ->where('prices.price', '!=', 0)
                 ->where(function($q) use ($searchableColumns, $searchBy) {
-//                    $searchBy = implode("|", explode(" ", $searchBy));
                     foreach ($searchableColumns as $searchableColumn) {
                         $q->orWhere($searchableColumn, 'LIKE', "%{$searchBy}%");
                     }

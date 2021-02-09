@@ -6,11 +6,13 @@ use Illuminate\Support\Facades\DB;
 
 class CategoriesController extends Controller
 {
-    public function getCategories(Request $request) {
+    public function getCategories() {
         $productCategories = DB::table('product_categories')
             ->orderBy('product_categories_order', 'asc')
-            ->select(['id', 'product_categories_name_ru', 'product_categories_parent_id', 'icon'])->get();
+            ->select(['id', 'product_categories_name_ru', 'product_categories_parent_id', 'icon'])
+            ->get();
         $categories = $this->getSubCategory($productCategories);
+
         return response()->json($categories);
     }
 

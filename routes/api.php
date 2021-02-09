@@ -22,8 +22,8 @@ Route::get('getCategories', 'CategoriesController@getCategories');
 
 Route::post('getProducts/{categoryId?}', 'ProductsController@getProducts');
 Route::get('getProduct/{productId}', 'ProductsController@getProduct');
-Route::get('getFilterData/{categoryId?}', 'ProductsController@getFilterData');
-Route::post('searchProduct', 'ProductsController@searchProduct');
+Route::match(['get', 'post'], 'getFilterData/{categoryId?}', 'ProductsController@getFilterData');
+Route::post('searchProduct/{categoryId?}', 'ProductsController@searchProduct');
 Route::get('newProducts', 'ProductsController@newProducts');
 Route::get('getBrands', 'ProductsController@getBrands');
 Route::get('getCertificates', 'ProductsController@getCertificates');
