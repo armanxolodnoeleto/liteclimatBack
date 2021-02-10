@@ -296,7 +296,7 @@ class ProductsController extends Controller
                 $attributeIds = array_values($request->checkboxes);
             }
         }
-        
+
         $attributeValueIds = [];
         if ($request->has('fromTo')) {
             $valueIds = $request->fromTo;
