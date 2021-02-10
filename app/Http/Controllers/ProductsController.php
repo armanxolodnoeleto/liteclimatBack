@@ -321,15 +321,31 @@ class ProductsController extends Controller
             }
         }
 
+        $manufacturerAttrIds = [];
+        if ($request->has('manufacturerCountries')) {
+            $manufacturerCountries = $request->manufacturerCountries;
+            $productManufacturerIds = DB::table('products')
+                ->whereIn('manufacturer_id', $manufacturerCountries)
+                ->pluck('id');
+
+            if (!empty($productManufacturerIds)) {
+                $manufacturerAttrIds = DB::table('product_characteristics')
+                    ->whereIn('product_id', $productManufacturerIds)
+                    ->groupBy('attribute_id')
+                    ->pluck('attribute_id')
+                    ->toArray();
+            }
+        }
+
         $characteristicAttributes = DB::table('characteristic_to_categories')
             ->leftJoin('characteristic_attributes', 'characteristic_to_categories.characteristic_id', '=', 'characteristic_attributes.characteristic_id')
             ->leftJoin('characteristics', 'characteristic_attributes.characteristic_id', '=', 'characteristics.id')
             ->leftJoin('value_types', 'characteristics.value_type_id', '=', 'value_types.id')
             ->where('characteristic_to_categories.category_id', $categoryId);
 
-        if (count($attributeIds) > 0 || count($attributeValueIds) > 0) {
-            $characteristics = array_unique(array_merge($attributeIds, $attributeValueIds));
-            $characteristicAttributes = $characteristicAttributes->whereIn('characteristic_attributes.id', $attributeIds);
+        if (count($attributeIds) > 0 || count($attributeValueIds) > 0 || count($manufacturerAttrIds) > 0) {
+            $characteristics = array_unique(array_merge(array_merge($attributeIds, $attributeValueIds), $manufacturerAttrIds));
+            $characteristicAttributes = $characteristicAttributes->whereIn('characteristic_attributes.id', $characteristics);
             $values = array_intersect($characteristics, $values);
         }
 
