@@ -149,6 +149,7 @@ class FeedbackController extends Controller
             ]);
             $table = 'xl_reviews';
         }
+
         if ($validator->fails()) {
             return response()->json(['errors'=>$validator->errors()]);
         }
@@ -156,7 +157,11 @@ class FeedbackController extends Controller
         try {
             $newReviewPhotos = [];
             $reviewData['project_id'] = $projectId;
-            $reviewData['admin_comment'] = 'Здравствуйте, '. $reviewData['name'] . ' ' . $reviewData['last_name'] .'. Спасибо вам за отзыв, всегда готовы вам помочь.';
+
+            if ($projectId == config('projects.lk')) {
+                $reviewData['admin_comment'] = 'Здравствуйте, '. $reviewData['name'] . ' ' . $reviewData['last_name'] .'. Спасибо вам за отзыв, всегда готовы вам помочь.';
+            }
+
             $reviewId = DB::table($table)
                 ->insertGetId($reviewData);
 

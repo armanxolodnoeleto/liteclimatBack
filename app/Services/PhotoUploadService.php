@@ -4,7 +4,7 @@ namespace App\Services;
 class PhotoUploadService {
     protected $folder;
 
-    public function __construct($projectId){
+    public function __construct($projectId) {
         if ($projectId == config('projects.lk')) {
             $this->folder = 'lk/';
         }else {
@@ -12,9 +12,10 @@ class PhotoUploadService {
         }
     }
 
-    public function uploadPhoto($file, $dir){
+    public function uploadPhoto($file, $dir) {
         $return = [];
         $dir .= $this->folder;
+        $dir = '/uploads/'. $dir;
         $return['dir'] = $dir;
         $x = explode('.', $file->getClientOriginalName());
         $format = end($x);
