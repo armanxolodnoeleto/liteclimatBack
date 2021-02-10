@@ -74,7 +74,7 @@ class ProductsController extends Controller
             $query = $query->whereIn('products.id', $checkboxProducts);
         }
 
-        $query = $query->select('products.id', 'products.manufacturer_id', 'products.name as model', 'product_manufacturers.name as brand', 'product_manufacturers.logo as brand_logo', 'product_series.series_name_ru as series_name', DB::raw('CONCAT("[", GROUP_CONCAT(JSON_OBJECT( "cover_photo", product_series_photos.cover_photo,"series_picture_folder",  product_series_photos.folder, "series_picture_file_name", product_series_photos.file_name, "series_picture_format", product_series_photos.file_format)), "]") as cover_photo'), 'photos.folder as product_picture_folder','photos.file_name as product_picture_file_name', 'photos.file_format as product_picture_format', 'prices.price', 'prices.setup_price', 'prices.has_chat', 'prices.has_sale', 'prices.price_with_setup', 'prices.price_without_setup', 'prices.chat_with_percent', 'prices.chat_without_percent', 'products.available')
+        $query = $query->select('products.id', 'products.manufacturer_id', 'products.name as model', 'product_manufacturers.name as brand', 'product_manufacturers.logo as brand_logo', 'product_manufacturers.warranty', 'product_series.series_name_ru as series_name', DB::raw('CONCAT("[", GROUP_CONCAT(JSON_OBJECT( "cover_photo", product_series_photos.cover_photo,"series_picture_folder",  product_series_photos.folder, "series_picture_file_name", product_series_photos.file_name, "series_picture_format", product_series_photos.file_format)), "]") as cover_photo'), 'photos.folder as product_picture_folder','photos.file_name as product_picture_file_name', 'photos.file_format as product_picture_format', 'prices.price', 'prices.setup_price', 'prices.has_chat', 'prices.has_sale', 'prices.price_with_setup', 'prices.price_without_setup', 'prices.chat_with_percent', 'prices.chat_without_percent', 'products.available')
             ->groupBy('products.id');
         if ($request->has('orderBy')) {
             $query->orderBy('prices.price', $request->orderBy);
@@ -178,7 +178,7 @@ class ProductsController extends Controller
             ->leftJoin('product_series_photos', 'product_series.id', '=', 'product_series_photos.series_id')
             ->where('prices.project_id', $projectId)
             ->where('products.id', $productId)
-            ->select('products.name as model', 'products.id as articule', 'prices.market', 'prices.setup_price', 'prices.price', 'prices.has_chat', 'prices.has_sale', 'prices.price_with_setup', 'prices.price_without_setup', 'prices.chat_with_percent', 'prices.chat_without_percent', 'product_manufacturers.name as brand', 'product_manufacturers.id as manufacturer_id', 'product_manufacturers.logo as manufacturer_logo', 'product_series.series_name_ru as series_name', 'product_series.id as series_id', 'product_series.series_description_ru as description', 'product_categories.product_categories_name_ru as category_name', 'product_categories.id as category_id', 'products.available')
+            ->select('products.name as model', 'products.id as articule', 'prices.market', 'prices.setup_price', 'prices.price', 'prices.has_chat', 'prices.has_sale', 'prices.price_with_setup', 'prices.price_without_setup', 'prices.chat_with_percent', 'prices.chat_without_percent', 'product_manufacturers.name as brand', 'product_manufacturers.id as manufacturer_id', 'product_manufacturers.logo as manufacturer_logo', 'product_manufacturers.warranty', 'product_series.series_name_ru as series_name', 'product_series.id as series_id', 'product_series.series_description_ru as description', 'product_categories.product_categories_name_ru as category_name', 'product_categories.id as category_id', 'products.available')
             ->groupBy('products.id')
             ->first();
 
@@ -309,8 +309,15 @@ class ProductsController extends Controller
         $characteristicAttributes = DB::table('characteristic_to_categories')
             ->leftJoin('characteristic_attributes', 'characteristic_to_categories.characteristic_id', '=', 'characteristic_attributes.characteristic_id')
             ->leftJoin('characteristics', 'characteristic_attributes.characteristic_id', '=', 'characteristics.id')
-            ->leftJoin('value_types', 'characteristics.value_type_id', '=', 'value_types.id')
-            ->where('characteristic_to_categories.category_id', $categoryId);
+            ->leftJoin('value_types', 'characteristics.value_type_id', '=', 'value_types.id');
+
+        if ($request->has('manufacturerCountries')) {
+            $manufacturerCountryIds = $request->get('manufacturerCountries');
+            $characteristicAttributes = $characteristicAttributes
+                ->leftJoin('product_characteristics', 'characteristic_attributes.characteristic_id', 'product_characteristics.characteristic_id')
+                ->leftJoin('products', 'product_characteristics.product_id', 'products.id')
+                ->whereIn('products.manufacturer_id', $manufacturerCountryIds);
+        }
 
         if (count($attributeIds) > 0 || count($attributeValueIds) > 0) {
             $characteristics = array_unique(array_merge($attributeIds, $attributeValueIds));
@@ -318,7 +325,8 @@ class ProductsController extends Controller
             $values = array_intersect($characteristics, $values);
         }
 
-        $characteristicAttributes = $characteristicAttributes->select('characteristic_attributes.name_ru', 'characteristic_attributes.id', 'characteristic_attributes.characteristic_id', 'characteristics.name_ru as title', 'value_types.name')
+        $characteristicAttributes = $characteristicAttributes->where('characteristic_to_categories.category_id', $categoryId)
+            ->select('characteristic_attributes.name_ru', 'characteristic_attributes.id', 'characteristic_attributes.characteristic_id', 'characteristics.name_ru as title', 'value_types.name')
             ->groupBy('characteristic_attributes.id')
             ->orderBy('characteristic_attributes.name_ru', 'ASC')
             ->get();
@@ -336,11 +344,11 @@ class ProductsController extends Controller
         $manufacturerCountries = DB::table('prices')
             ->leftJoin('product_to_categories', 'prices.product_id', '=', 'product_to_categories.product_id')
             ->leftJoin('products', 'product_to_categories.product_id', '=', 'products.id')
+            ->leftJoin('product_characteristics', 'products.id', '=', 'product_characteristics.product_id')
             ->leftJoin('product_manufacturers', 'products.manufacturer_id', '=', 'product_manufacturers.id');
 
-        if ($request->has('manufacturerCountries')) {
-            $manufacturerCountryIds = $request->manufacturerCountries;
-            $manufacturerCountries = $manufacturerCountries->whereIn('products.manufacturer_id', $manufacturerCountryIds);
+        if (count($attributeIds) > 0) {
+            $manufacturerCountries = $manufacturerCountries->whereIn('product_characteristics.attribute_id', $attributeIds);
         }
 
         $manufacturerCountries = $manufacturerCountries->where('prices.project_id', $projectId)
