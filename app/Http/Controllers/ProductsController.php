@@ -300,19 +300,22 @@ class ProductsController extends Controller
         $attributeValueIds = [];
         if ($request->has('fromTo')) {
             $valueIds = $request->fromTo;
-            $valueProducts = $this->valuesProducts($valueIds);
-            if (count($valueProducts) > 0) {
-                $attributeValueIds = DB::table('product_characteristics')
-                    ->whereIn('product_id', $valueProducts)
-                    ->groupBy('attribute_id')
-                    ->pluck('attribute_id')
-                    ->toArray();
-            }else {
-                foreach ($request->fromTo as $fromTo) {
-                    if (!is_null($fromTo[0])) {
-                        $attributeValueIds[] = $fromTo[0];
-                    }elseif (!is_null($fromTo[1])) {
-                        $attributeValueIds[] = $fromTo[1];
+            unset($valueIds['price']);
+            if (!empty($valueIds)) {
+                $valueProducts = $this->valuesProducts($valueIds);
+                if (count($valueProducts) > 0) {
+                    $attributeValueIds = DB::table('product_characteristics')
+                        ->whereIn('product_id', $valueProducts)
+                        ->groupBy('attribute_id')
+                        ->pluck('attribute_id')
+                        ->toArray();
+                }else {
+                    foreach ($request->fromTo as $fromTo) {
+                        if (!is_null($fromTo[0])) {
+                            $attributeValueIds[] = $fromTo[0];
+                        }elseif (!is_null($fromTo[1])) {
+                            $attributeValueIds[] = $fromTo[1];
+                        }
                     }
                 }
             }
