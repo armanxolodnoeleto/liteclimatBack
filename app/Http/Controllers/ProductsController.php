@@ -267,21 +267,6 @@ class ProductsController extends Controller
         $values = [1, 2, 4, 5, 47, 48, 49, 50, 51, 52, 53, 54];
         $data = [];
 
-        $manufacturerCountries = DB::table('prices')
-            ->leftJoin('product_to_categories', 'prices.product_id', '=', 'product_to_categories.product_id')
-            ->leftJoin('products', 'product_to_categories.product_id', '=', 'products.id')
-            ->leftJoin('product_manufacturers', 'products.manufacturer_id', '=', 'product_manufacturers.id')
-
-            ->where('prices.project_id', $projectId)
-            ->where('product_to_categories.category_id', $categoryId)
-            ->where('prices.status', 1)
-            ->where('prices.price', '!=', 0)
-
-            ->select(DB::raw('COUNT(prices.product_id) as count'), 'product_manufacturers.logo', 'product_manufacturers.name as brand', 'product_manufacturers.id')
-            ->groupBy('product_manufacturers.id')
-            ->orderBy('product_manufacturers.name', 'ASC')
-            ->get();
-
         $attributeIds = [];
         if ($request->has('checkboxes')) {
             $checkboxIds = $request->checkboxes;
@@ -321,31 +306,15 @@ class ProductsController extends Controller
             }
         }
 
-        $manufacturerAttrIds = [];
-        if ($request->has('manufacturerCountries')) {
-            $manufacturerCountries = $request->manufacturerCountries;
-            $productManufacturerIds = DB::table('products')
-                ->whereIn('manufacturer_id', $manufacturerCountries)
-                ->pluck('id');
-
-            if (!empty($productManufacturerIds)) {
-                $manufacturerAttrIds = DB::table('product_characteristics')
-                    ->whereIn('product_id', $productManufacturerIds)
-                    ->groupBy('attribute_id')
-                    ->pluck('attribute_id')
-                    ->toArray();
-            }
-        }
-
         $characteristicAttributes = DB::table('characteristic_to_categories')
             ->leftJoin('characteristic_attributes', 'characteristic_to_categories.characteristic_id', '=', 'characteristic_attributes.characteristic_id')
             ->leftJoin('characteristics', 'characteristic_attributes.characteristic_id', '=', 'characteristics.id')
             ->leftJoin('value_types', 'characteristics.value_type_id', '=', 'value_types.id')
             ->where('characteristic_to_categories.category_id', $categoryId);
 
-        if (count($attributeIds) > 0 || count($attributeValueIds) > 0 || count($manufacturerAttrIds) > 0) {
-            $characteristics = array_unique(array_merge(array_merge($attributeIds, $attributeValueIds), $manufacturerAttrIds));
-            $characteristicAttributes = $characteristicAttributes->whereIn('characteristic_attributes.id', $characteristics);
+        if (count($attributeIds) > 0 || count($attributeValueIds) > 0) {
+            $characteristics = array_unique(array_merge($attributeIds, $attributeValueIds));
+            $characteristicAttributes = $characteristicAttributes->whereIn('characteristic_attributes.id', $attributeIds);
             $values = array_intersect($characteristics, $values);
         }
 
@@ -362,6 +331,26 @@ class ProductsController extends Controller
             ->where('product_characteristics.attribute_id', null)
             ->select('characteristics.name_ru as title', 'characteristics.id')
             ->groupBy('characteristics.name_ru', 'characteristics.id')
+            ->get();
+
+        $manufacturerCountries = DB::table('prices')
+            ->leftJoin('product_to_categories', 'prices.product_id', '=', 'product_to_categories.product_id')
+            ->leftJoin('products', 'product_to_categories.product_id', '=', 'products.id')
+            ->leftJoin('product_manufacturers', 'products.manufacturer_id', '=', 'product_manufacturers.id');
+
+        if ($request->has('manufacturerCountries')) {
+            $manufacturerCountryIds = $request->manufacturerCountries;
+            $manufacturerCountries = $manufacturerCountries->whereIn('products.manufacturer_id', $manufacturerCountryIds);
+        }
+
+        $manufacturerCountries = $manufacturerCountries->where('prices.project_id', $projectId)
+            ->where('product_to_categories.category_id', $categoryId)
+            ->where('prices.status', 1)
+            ->where('prices.price', '!=', 0);
+
+        $manufacturerCountries = $manufacturerCountries->select(DB::raw('COUNT(prices.product_id) as count'), 'product_manufacturers.logo', 'product_manufacturers.name as brand', 'product_manufacturers.id')
+            ->groupBy('product_manufacturers.id')
+            ->orderBy('product_manufacturers.name', 'ASC')
             ->get();
 
         $dimensionIds = [47, 48, 49, 50, 51, 52, 53, 54];
