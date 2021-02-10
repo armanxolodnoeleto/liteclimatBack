@@ -282,33 +282,39 @@ class ProductsController extends Controller
             ->orderBy('product_manufacturers.name', 'ASC')
             ->get();
 
-        $characteristicIds = [];
+        $attributeIds = [];
         if ($request->has('checkboxes')) {
             $checkboxIds = $request->checkboxes;
             $checkboxesProducts = $this->checkboxesProducts($checkboxIds, true);
             if (count($checkboxesProducts) > 0) {
-                $characteristicIds = DB::table('product_characteristics')
+                $attributeIds = DB::table('product_characteristics')
                     ->whereIn('product_id', $checkboxesProducts)
-                    ->groupBy('characteristic_id')
-                    ->pluck('characteristic_id')
+                    ->groupBy('attribute_id')
+                    ->pluck('attribute_id')
                     ->toArray();
             }else {
-                $characteristicIds = array_keys($request->checkboxes);
+                $attributeIds = array_values($request->checkboxes);
             }
         }
 
-        $characteristicValueIds = [];
+        $attributeValueIds = [];
         if ($request->has('fromTo')) {
             $valueIds = $request->fromTo;
             $valueProducts = $this->valuesProducts($valueIds);
             if (count($valueProducts) > 0) {
-                $characteristicValueIds = DB::table('product_characteristics')
+                $attributeValueIds = DB::table('product_characteristics')
                     ->whereIn('product_id', $valueProducts)
-                    ->groupBy('characteristic_id')
-                    ->pluck('characteristic_id')
+                    ->groupBy('attribute_id')
+                    ->pluck('attribute_id')
                     ->toArray();
             }else {
-                $characteristicValueIds = array_keys($request->fromTo);
+                foreach ($request->fromTo as $fromTo) {
+                    if (!is_null($fromTo[0])) {
+                        $attributeValueIds[] = $fromTo[0];
+                    }elseif (!is_null($fromTo[1])) {
+                        $attributeValueIds[] = $fromTo[1];
+                    }
+                }
             }
         }
 
@@ -318,9 +324,9 @@ class ProductsController extends Controller
             ->leftJoin('value_types', 'characteristics.value_type_id', '=', 'value_types.id')
             ->where('characteristic_to_categories.category_id', $categoryId);
 
-        if (count($characteristicIds) > 0 || count($characteristicValueIds) > 0) {
-            $characteristics = array_unique(array_merge($characteristicIds, $characteristicValueIds));
-            $characteristicAttributes = $characteristicAttributes->whereIn('characteristic_to_categories.characteristic_id', $characteristics);
+        if (count($attributeIds) > 0 || count($attributeValueIds) > 0) {
+            $characteristics = array_unique(array_merge($attributeIds, $attributeValueIds));
+            $characteristicAttributes = $characteristicAttributes->whereIn('characteristic_attributes.id', $attributeIds);
             $values = array_intersect($characteristics, $values);
         }
 
