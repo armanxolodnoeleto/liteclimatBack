@@ -692,4 +692,26 @@ class ProductsController extends Controller
         return response()->json($certificates);
     }
 
+    public function getCarouselData(Request $request) {
+        $projectId = $request->header('projectId');
+
+        $productImages = DB::table('prices')
+            ->join('products', 'prices.product_id', '=', 'products.id', 'inner')
+            ->leftJoin('product_manufacturers', 'products.manufacturer_id', '=', 'product_manufacturers.id')
+            ->leftJoin('product_series', 'products.series_id', '=', 'product_series.id')
+            ->leftJoin('product_series_photos', 'product_series.id', '=', 'product_series_photos.series_id')
+            ->leftJoin('photos', 'products.id', '=', 'photos.product_id')
+            ->where('prices.project_id', $projectId)
+            ->where('prices.status', 1)
+            ->where('product_series_photos.cover_photo',1)
+            ->where('prices.price', '!=', 0)
+            ->where('prices.slide_show_active', 1)
+            ->select('products.id', 'products.name as model', 'product_manufacturers.name as brand', DB::raw('CONCAT("[", GROUP_CONCAT(JSON_OBJECT( "cover_photo", product_series_photos.cover_photo,"series_picture_folder",  product_series_photos.folder, "series_picture_file_name", product_series_photos.file_name, "series_picture_format", product_series_photos.file_format)), "]") as cover_photo'), 'product_series.series_name_ru as series_name', 'photos.folder as product_picture_folder','photos.file_name as product_picture_file_name', 'photos.file_format as product_picture_format', 'prices.price')
+            ->groupBy('products.id')
+            ->orderByDesc('prices.product_id')
+            ->get();
+
+        return response()->json($productImages);
+    }
+
 }
