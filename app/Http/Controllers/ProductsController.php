@@ -184,6 +184,8 @@ class ProductsController extends Controller
             ->groupBy('products.id')
             ->first();
 
+        $defaultSetup = $this->defaultSetup($productId, $projectId, $product->category_id);
+
         $certificate = [];
         if (isset($product->manufacturer_id)) {
             $manufacturerCertificate = $product->manufacturer_id;
@@ -225,12 +227,162 @@ class ProductsController extends Controller
         }
 
         $data['product'] = $product;
+        $data['default_setup'] = $defaultSetup - $product->setup_price;
         $data['characteristics'] = $characteristics;
         $data['photos'] = $photos;
         $data['certificate'] = $certificate;
         $data['filter'] = $filter;
 
         return response()->json($data);
+    }
+
+    private function defaultSetup($productId, $projectId, $categoryId){
+        $coolingPower = DB::table('product_characteristics')
+            ->where(['characteristic_id' => 1, 'product_id' => $productId])
+            ->select('value')
+            ->first();
+        $coolingPower = $coolingPower->value;
+        $res = 0;
+        if($categoryId == 4 || $categoryId == 5){
+            $room_count = 0;
+            $margin = $this->getMargin($projectId, $coolingPower);
+            $attribute = DB::table('product_characteristics')
+                ->where(['characteristic_id' => 63, 'product_id' => $productId])
+                ->select('attribute_id')
+                ->first();
+            $attribute = $attribute->attribute_id;
+            if($attribute == 218){
+                $room_count = 2;
+            }else if($attribute == 219){
+                $room_count = 3;
+            }else if($attribute == 220){
+                $room_count = 4;
+            }else if($attribute == 221){
+                $room_count = 5;
+            }else if($attribute == 222){
+                $room_count = 6;
+            }else if($attribute == 223){
+                $room_count = 7;
+            }else if($attribute == 224){
+                $room_count = 8;
+            }else if($attribute == 225){
+                $room_count = 9;
+            }
+            $res = $room_count * $margin;
+        }else if($categoryId == 8 || $categoryId == 9 || $categoryId == 10 || $categoryId == 11){
+            $number = ltrim($coolingPower,"0");
+            $number = (float)$number;
+            if ($number<4.5){
+                $res = 11400;
+            }else if($number>=4.5 and $number<6){
+                $res = 12400;
+            }else if($number>=6 and $number<8){
+                $res = 13400;
+            }else if($number>=8 and $number<11){
+                $res = 15400;
+            }else if($number>=11 and $number<16){
+                $res = 16400;
+            }else if($number>=16 and $number<21){
+                $res = 17400;
+            }else if($number>=21 and $number<26){
+                $res = 24900;
+            }else if($number>=26 and $number<31){
+                $res = 29900;
+            }else if($number>=31 and $number<36){
+                $res = 34900;
+            }else if($number>=36 and $number<41){
+                $res = 39900;
+            }
+        }else{
+            $number = ltrim($coolingPower,"0");
+            $number = (float)$number;
+            if ($number<1.8){
+                $res = 7900;
+            }else if($number>=1.8 and $number<2.3){
+                $res = 7900;
+            }else if($number>=2.3 and $number<3.1){
+                $res = 7900;
+            }else if($number>=3.1 and $number<4.9){
+                $res = 8900;
+            }else if($number>=4.9 and $number<6.7){
+                $res = 9900;
+            }else if($number>=6.7 and $number<7.8){
+                $res = 10900;
+            }else if($number>=7.8 and $number<9.8){
+                $res = 11900;
+            }else if($number>=9.8){
+                $res = 12900;
+            }
+        }
+        return $res;
+    }
+
+    private function getMargin($projectId, $coolingPower){
+        $margins = DB::table('margins')->get();
+        $value = 0;
+        foreach($margins as $margin){
+            $marginValues = DB::table('margin_values')
+                ->where(['margin_id' => $margin->id, 'project_id' => $projectId])
+                ->sortByDesc('id')
+                ->first();
+            if($margin->id == 2 && $coolingPower <= $margin->statement1){
+                if($marginValues){
+                    $value = $marginValues->value;
+                }else{
+                    $value = 0;
+                }
+            }
+            if($margin->id == 3 && $coolingPower > $margin->statement1 && $coolingPower <= $margin->statement2){
+                if($marginValues){
+                    $value = $marginValues->value;
+                }else{
+                    $value = 0;
+                }
+            }
+            if($margin->id == 4 && $coolingPower > $margin->statement1 && $coolingPower <= $margin->statement2){
+                if($marginValues){
+                    $value = $marginValues->value;
+                }else{
+                    $value = 0;
+                }
+            }
+            if($margin->id == 5 && $coolingPower > $margin->statement1 && $coolingPower <= $margin->statement2){
+                if($marginValues){
+                    $value = $marginValues->value;
+                }else{
+                    $value = 0;
+                }
+            }
+            if($margin->id == 6 && $coolingPower > $margin->statement1 && $coolingPower <= $margin->statement2){
+                if($marginValues){
+                    $value = $marginValues->value;
+                }else{
+                    $value = 0;
+                }
+            }
+            if($margin->id == 7 && $coolingPower > $margin->statement1 && $coolingPower <= $margin->statement2){
+                if($marginValues){
+                    $value = $marginValues->value;
+                }else{
+                    $value = 0;
+                }
+            }
+            if($margin->id == 8 && $coolingPower > $margin->statement1 && $coolingPower <= $margin->statement2){
+                if($marginValues){
+                    $value = $marginValues->value;
+                }else{
+                    $value = 0;
+                }
+            }
+            if($margin->id == 9 && $coolingPower > $margin->statement1){
+                if($marginValues->first()){
+                    $value = $marginValues->value;
+                }else{
+                    $value = 0;
+                }
+            }
+        }
+        return $value;
     }
 
     private function getProductFilter($characteristicId, $productId, $characteristicAttr = null) {
