@@ -84,11 +84,12 @@ class ProductsController extends Controller
 
         $productIds = $query->pluck('id');
         $products = $query->paginate(12);
+        $productPageIds = $query->pluck('id');
 
         $characteristics = DB::table('product_characteristics')
             ->leftJoin('characteristics', 'product_characteristics.characteristic_id', '=', 'characteristics.id')
             ->leftJoin('characteristic_attributes', 'product_characteristics.attribute_id', '=', 'characteristic_attributes.id')
-            ->whereIn('product_id', $productIds)
+            ->whereIn('product_id', $productPageIds)
             ->where('product_characteristics.characteristic_id', 3)
             ->select('product_characteristics.product_id as id', 'characteristics.name_ru as characteristic_name_ru', 'characteristic_attributes.name_ru as characteristic_attribute_name')
             ->orderBy('characteristic_attributes.id', 'ASC')
