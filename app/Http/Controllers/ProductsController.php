@@ -226,8 +226,20 @@ class ProductsController extends Controller
             $filter = Cache::get('filter_'. $productId);
         }
 
+        $designerConditioners = [294,390,303,427,377,426,315,316,436,18,917,1591,449,450,422,1050,241,51,227,1608,169,189,64,70,958,961,1638,1672,1671,92,501,1126,497,498,166,292,108,755,529,1205,538,1562,1567,170,535,19,311,502,334,212,780,548,781,135,1173,254,260,1318,1331,1330,477];
+
+        $prepayment = '';
+        if ($product->available == 0) {
+            $prepayment = 'Предоплата 100%';
+        }elseif ($product->price > 40000 || in_array($product->series_id, $designerConditioners)) {
+            $prepayment = 'Предоплата 3%';
+        }else {
+            $prepayment = 'Заказ от 40 000 руб. 3% предоплата';
+        }
+
         $data['product'] = $product;
         $data['default_setup'] = $defaultSetup - $product->setup_price;
+        $data['prepayment'] = $prepayment;
         $data['characteristics'] = $characteristics;
         $data['photos'] = $photos;
         $data['certificate'] = $certificate;
