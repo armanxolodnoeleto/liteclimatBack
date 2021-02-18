@@ -22,8 +22,8 @@ class CategoriesController extends Controller
                 $secondLevelCategories[] = $secondLevelCategoryItems;
             }
         }
-        return response()->json(['categories' => $categories, 'secondLevelCategories' => $secondLevelCategories]);
-//        return response()->json($categories);
+//        return response()->json(['categories' => $categories, 'secondLevelCategories' => $secondLevelCategories]);
+        return response()->json($categories);
     }
 
     private function makeCategoryTree($data, $parent = 0) {

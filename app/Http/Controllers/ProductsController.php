@@ -603,7 +603,7 @@ class ProductsController extends Controller
         return $data;
     }
 
-    public function searchProduct(Request $request, $categoryId = null) {
+    public function searchProduct(Request $request, $categoryId = []) {
         $projectId = $request->header('projectId');
         $searchBy = $request->search;
 
@@ -618,8 +618,12 @@ class ProductsController extends Controller
                 ->leftJoin('product_series_photos', 'product_series.id', '=', 'product_series_photos.series_id')
                 ->leftJoin('photos', 'products.id', '=', 'photos.product_id');
 
-            if (!is_null($categoryId)) {
-                $searchResponse = $searchResponse->where('product_to_categories.category_id', $categoryId);
+            if (!empty($categoryId)) {
+                if (is_array($categoryId)) {
+                    $searchResponse = $searchResponse->whereIn('product_to_categories.category_id', $categoryId);
+                }else {
+                    $searchResponse = $searchResponse->where('product_to_categories.category_id', $categoryId);
+                }
             }
 
             $searchResponse = $searchResponse->where('prices.project_id', $projectId)
