@@ -13,7 +13,17 @@ class CategoriesController extends Controller
             ->get();
         $categories = $this->makeCategoryTree($productCategories);
 
-        return response()->json($categories);
+        $secondLevelCategoryItems = [];
+        $secondLevelCategories = [];
+        foreach ($categories as $category) {
+            foreach ($category['subCategories'] as $subCategory) {
+                $secondLevelCategoryItems['name'] = $subCategory['name'];
+                $secondLevelCategoryItems['id'] = array_values(array_column($subCategory['subCategories'], 'id'));
+                $secondLevelCategories[] = $secondLevelCategoryItems;
+            }
+        }
+        return response()->json(['categories' => $categories, 'secondLevelCategories' => $secondLevelCategories]);
+//        return response()->json($categories);
     }
 
     private function makeCategoryTree($data, $parent = 0) {

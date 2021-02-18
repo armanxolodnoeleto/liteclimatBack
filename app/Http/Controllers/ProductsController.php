@@ -253,79 +253,82 @@ class ProductsController extends Controller
             ->where(['characteristic_id' => 1, 'product_id' => $productId])
             ->select('value')
             ->first();
-        $coolingPower = $coolingPower->value;
         $res = 0;
-        if($categoryId == 4 || $categoryId == 5){
-            $room_count = 0;
-            $margin = $this->getMargin($projectId, $coolingPower);
-            $attribute = DB::table('product_characteristics')
-                ->where(['characteristic_id' => 63, 'product_id' => $productId])
-                ->select('attribute_id')
-                ->first();
-            $attribute = $attribute->attribute_id;
-            if($attribute == 218){
-                $room_count = 2;
-            }else if($attribute == 219){
-                $room_count = 3;
-            }else if($attribute == 220){
-                $room_count = 4;
-            }else if($attribute == 221){
-                $room_count = 5;
-            }else if($attribute == 222){
-                $room_count = 6;
-            }else if($attribute == 223){
-                $room_count = 7;
-            }else if($attribute == 224){
-                $room_count = 8;
-            }else if($attribute == 225){
-                $room_count = 9;
-            }
-            $res = $room_count * $margin;
-        }else if($categoryId == 8 || $categoryId == 9 || $categoryId == 10 || $categoryId == 11){
-            $number = ltrim($coolingPower,"0");
-            $number = (float)$number;
-            if ($number<4.5){
-                $res = 11400;
-            }else if($number>=4.5 and $number<6){
-                $res = 12400;
-            }else if($number>=6 and $number<8){
-                $res = 13400;
-            }else if($number>=8 and $number<11){
-                $res = 15400;
-            }else if($number>=11 and $number<16){
-                $res = 16400;
-            }else if($number>=16 and $number<21){
-                $res = 17400;
-            }else if($number>=21 and $number<26){
-                $res = 24900;
-            }else if($number>=26 and $number<31){
-                $res = 29900;
-            }else if($number>=31 and $number<36){
-                $res = 34900;
-            }else if($number>=36 and $number<41){
-                $res = 39900;
-            }
-        }else{
-            $number = ltrim($coolingPower,"0");
-            $number = (float)$number;
-            if ($number<1.8){
-                $res = 7900;
-            }else if($number>=1.8 and $number<2.3){
-                $res = 7900;
-            }else if($number>=2.3 and $number<3.1){
-                $res = 7900;
-            }else if($number>=3.1 and $number<4.9){
-                $res = 8900;
-            }else if($number>=4.9 and $number<6.7){
-                $res = 9900;
-            }else if($number>=6.7 and $number<7.8){
-                $res = 10900;
-            }else if($number>=7.8 and $number<9.8){
-                $res = 11900;
-            }else if($number>=9.8){
-                $res = 12900;
+        if ($coolingPower) {
+            $coolingPower = $coolingPower->value;
+            if($categoryId == 4 || $categoryId == 5){
+                $room_count = 0;
+                $margin = $this->getMargin($projectId, $coolingPower);
+                $attribute = DB::table('product_characteristics')
+                    ->where(['characteristic_id' => 63, 'product_id' => $productId])
+                    ->select('attribute_id')
+                    ->first();
+                $attribute = $attribute->attribute_id;
+                if($attribute == 218){
+                    $room_count = 2;
+                }else if($attribute == 219){
+                    $room_count = 3;
+                }else if($attribute == 220){
+                    $room_count = 4;
+                }else if($attribute == 221){
+                    $room_count = 5;
+                }else if($attribute == 222){
+                    $room_count = 6;
+                }else if($attribute == 223){
+                    $room_count = 7;
+                }else if($attribute == 224){
+                    $room_count = 8;
+                }else if($attribute == 225){
+                    $room_count = 9;
+                }
+                $res = $room_count * $margin;
+            }else if($categoryId == 8 || $categoryId == 9 || $categoryId == 10 || $categoryId == 11){
+                $number = ltrim($coolingPower,"0");
+                $number = (float)$number;
+                if ($number<4.5){
+                    $res = 11400;
+                }else if($number>=4.5 and $number<6){
+                    $res = 12400;
+                }else if($number>=6 and $number<8){
+                    $res = 13400;
+                }else if($number>=8 and $number<11){
+                    $res = 15400;
+                }else if($number>=11 and $number<16){
+                    $res = 16400;
+                }else if($number>=16 and $number<21){
+                    $res = 17400;
+                }else if($number>=21 and $number<26){
+                    $res = 24900;
+                }else if($number>=26 and $number<31){
+                    $res = 29900;
+                }else if($number>=31 and $number<36){
+                    $res = 34900;
+                }else if($number>=36 and $number<41){
+                    $res = 39900;
+                }
+            }else{
+                $number = ltrim($coolingPower,"0");
+                $number = (float)$number;
+                if ($number<1.8){
+                    $res = 7900;
+                }else if($number>=1.8 and $number<2.3){
+                    $res = 7900;
+                }else if($number>=2.3 and $number<3.1){
+                    $res = 7900;
+                }else if($number>=3.1 and $number<4.9){
+                    $res = 8900;
+                }else if($number>=4.9 and $number<6.7){
+                    $res = 9900;
+                }else if($number>=6.7 and $number<7.8){
+                    $res = 10900;
+                }else if($number>=7.8 and $number<9.8){
+                    $res = 11900;
+                }else if($number>=9.8){
+                    $res = 12900;
+                }
             }
         }
+
         return $res;
     }
 
@@ -429,60 +432,12 @@ class ProductsController extends Controller
     }
 
     private function getFilters($productIds = [], $categoryId, $projectId) {
-//        $projectId = $request->header('projectId');
         $values = [1, 2, 4, 5, 47, 48, 49, 50, 51, 52, 53, 54];
         $data = [];
-
-//        $attributeIds = [];
-//        if ($request->has('checkboxes')) {
-//            $checkboxIds = $request->checkboxes;
-//            $checkboxesProducts = $this->checkboxesProducts($checkboxIds, true);
-//            if (count($checkboxesProducts) > 0) {
-//                $attributeIds = DB::table('product_characteristics')
-//                    ->whereIn('product_id', $checkboxesProducts)
-//                    ->groupBy('attribute_id')
-//                    ->pluck('attribute_id')
-//                    ->toArray();
-//            }else {
-//                $attributeIds = array_values($request->checkboxes);
-//            }
-//        }
-//
-//        $attributeValueIds = [];
-//        if ($request->has('fromTo')) {
-//            $valueIds = $request->fromTo;
-//            unset($valueIds['price']);
-//            if (!empty($valueIds)) {
-//                $valueProducts = $this->valuesProducts($valueIds);
-//                if (count($valueProducts) > 0) {
-//                    $attributeValueIds = DB::table('product_characteristics')
-//                        ->whereIn('product_id', $valueProducts)
-//                        ->groupBy('characteristic_id')
-//                        ->pluck('characteristic_id')
-//                        ->toArray();
-//                }else {
-//                    foreach ($request->fromTo as $fromTo) {
-//                        if (!is_null($fromTo[0])) {
-//                            $attributeValueIds[] = $fromTo[0];
-//                        }elseif (!is_null($fromTo[1])) {
-//                            $attributeValueIds[] = $fromTo[1];
-//                        }
-//                    }
-//                    $attributeValueIds = DB::table('product_characteristics')
-//                        ->whereIn('value', $attributeValueIds)
-//                        ->groupBy('characteristic_id')
-//                        ->pluck('characteristic_id')
-//                        ->toArray();
-//                }
-//            }
-//        }
-
-
         $attributeValueIds = [];
         $attributeIds = [];
-//        $productIds = [];
+
         if (!empty($productIds)) {
-//            $productIds = $request->get('productIds');
             $attributeIds = DB::table('product_characteristics')
                 ->whereIn('product_id', $productIds)
                 ->whereNotNull('attribute_id')
@@ -563,10 +518,6 @@ class ProductsController extends Controller
             ->leftJoin('products', 'product_to_categories.product_id', '=', 'products.id')
             ->leftJoin('product_manufacturers', 'products.manufacturer_id', '=', 'product_manufacturers.id');
 
-//        if (count($productIds) > 0) {
-//            $manufacturerCountries = $manufacturerCountries->whereIn('prices.product_id', $productIds);
-//        }
-
         $manufacturerCountries = $manufacturerCountries->where('prices.project_id', $projectId)
             ->where('product_to_categories.category_id', $categoryId)
             ->where('prices.status', 1)
@@ -589,86 +540,10 @@ class ProductsController extends Controller
         $values = [1, 2, 4, 5, 47, 48, 49, 50, 51, 52, 53, 54];
         $data = [];
 
-//        $attributeIds = [];
-//        if ($request->has('checkboxes')) {
-//            $checkboxIds = $request->checkboxes;
-//            $checkboxesProducts = $this->checkboxesProducts($checkboxIds, true);
-//            if (count($checkboxesProducts) > 0) {
-//                $attributeIds = DB::table('product_characteristics')
-//                    ->whereIn('product_id', $checkboxesProducts)
-//                    ->groupBy('attribute_id')
-//                    ->pluck('attribute_id')
-//                    ->toArray();
-//            }else {
-//                $attributeIds = array_values($request->checkboxes);
-//            }
-//        }
-//
-//        $attributeValueIds = [];
-//        if ($request->has('fromTo')) {
-//            $valueIds = $request->fromTo;
-//            unset($valueIds['price']);
-//            if (!empty($valueIds)) {
-//                $valueProducts = $this->valuesProducts($valueIds);
-//                if (count($valueProducts) > 0) {
-//                    $attributeValueIds = DB::table('product_characteristics')
-//                        ->whereIn('product_id', $valueProducts)
-//                        ->groupBy('characteristic_id')
-//                        ->pluck('characteristic_id')
-//                        ->toArray();
-//                }else {
-//                    foreach ($request->fromTo as $fromTo) {
-//                        if (!is_null($fromTo[0])) {
-//                            $attributeValueIds[] = $fromTo[0];
-//                        }elseif (!is_null($fromTo[1])) {
-//                            $attributeValueIds[] = $fromTo[1];
-//                        }
-//                    }
-//                    $attributeValueIds = DB::table('product_characteristics')
-//                        ->whereIn('value', $attributeValueIds)
-//                        ->groupBy('characteristic_id')
-//                        ->pluck('characteristic_id')
-//                        ->toArray();
-//                }
-//            }
-//        }
-
-
-//        $attributeValueIds = [];
-//        $attributeIds = [];
-//        $productIds = [];
-//        if (!empty($productIds)) {
-////            $productIds = $request->get('productIds');
-//            $attributeIds = DB::table('product_characteristics')
-//                ->whereIn('product_id', $productIds)
-//                ->whereNotNull('attribute_id')
-//                ->groupBy('attribute_id')
-//                ->pluck('attribute_id')
-//                ->toArray();
-//
-//            $workAreaAttr = DB::table('characteristic_attributes')
-//                ->where('characteristic_id', 3)
-//                ->pluck('id')
-//                ->toArray();
-//
-//            $attributeIds = array_unique(array_merge($workAreaAttr, $attributeIds), SORT_REGULAR);
-//
-//            $attributeValueIds = DB::table('product_characteristics')
-//                ->whereIn('product_id', $productIds)
-//                ->whereNull('attribute_id')
-//                ->groupBy('characteristic_id')
-//                ->pluck('characteristic_id')
-//                ->toArray();
-//        }
-
         $characteristicAttributes = DB::table('characteristic_to_categories')
             ->leftJoin('characteristic_attributes', 'characteristic_to_categories.characteristic_id', '=', 'characteristic_attributes.characteristic_id')
             ->leftJoin('characteristics', 'characteristic_attributes.characteristic_id', '=', 'characteristics.id')
             ->leftJoin('value_types', 'characteristics.value_type_id', '=', 'value_types.id');
-
-//        if (count($attributeIds) > 0) {
-//            $characteristicAttributes = $characteristicAttributes->whereIn('characteristic_attributes.id', $attributeIds);
-//        }
 
         $characteristicAttributes = $characteristicAttributes->where('characteristic_to_categories.category_id', $categoryId)
             ->select('characteristic_attributes.name_ru', 'characteristic_attributes.id', 'characteristic_attributes.characteristic_id', 'characteristics.name_ru as title', 'value_types.name')
@@ -681,10 +556,6 @@ class ProductsController extends Controller
             ->leftJoin('characteristics', 'product_characteristics.characteristic_id', '=', 'characteristics.id')
             ->where('characteristic_to_categories.category_id', $categoryId);
 
-//        if (count($attributeValueIds) > 0) {
-//            $values = array_intersect($attributeValueIds, $values);
-//        }
-
         $textFilters = $textFilters->whereIn('product_characteristics.characteristic_id', $values)
             ->where('product_characteristics.attribute_id', null)
             ->select('characteristics.name_ru as title', 'characteristics.id')
@@ -695,10 +566,6 @@ class ProductsController extends Controller
         $dimensionIds = [47, 48, 49, 50, 51, 52, 53, 54];
         $dimensions = [];
         $isDimension = false;
-
-//        if (count($attributeValueIds) > 0) {
-//            $dimensionIds = array_intersect($attributeValueIds, $dimensionIds);
-//        }
 
         foreach ($textFilters as $key => $textFilter) {
             if (in_array($textFilter->id, $dimensionIds)) {
@@ -718,10 +585,6 @@ class ProductsController extends Controller
             ->leftJoin('product_to_categories', 'prices.product_id', '=', 'product_to_categories.product_id')
             ->leftJoin('products', 'product_to_categories.product_id', '=', 'products.id')
             ->leftJoin('product_manufacturers', 'products.manufacturer_id', '=', 'product_manufacturers.id');
-
-//        if (count($productIds) > 0) {
-//            $manufacturerCountries = $manufacturerCountries->whereIn('prices.product_id', $productIds);
-//        }
 
         $manufacturerCountries = $manufacturerCountries->where('prices.project_id', $projectId)
             ->where('product_to_categories.category_id', $categoryId)
@@ -750,7 +613,6 @@ class ProductsController extends Controller
             $searchResponse = DB::table('prices')
                 ->join('product_to_categories', 'prices.product_id', '=', 'product_to_categories.product_id', 'inner')
                 ->leftJoin('products', 'product_to_categories.product_id', '=', 'products.id')
-//                ->leftJoin('products', 'prices.product_id', '=', 'products.id')
                 ->leftJoin('product_manufacturers', 'products.manufacturer_id', '=', 'product_manufacturers.id')
                 ->leftJoin('product_series', 'products.series_id', '=', 'product_series.id')
                 ->leftJoin('product_series_photos', 'product_series.id', '=', 'product_series_photos.series_id')
