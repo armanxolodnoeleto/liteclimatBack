@@ -97,7 +97,7 @@ class FeedbackController extends Controller
 
             return response()->json('success');
         }catch (\Exception $exception) {
-            return response()->json(['errors'=>$validator->errors()]);
+            return response()->json(['errors'=>$exception->errors()]);
         }
     }
 
