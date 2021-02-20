@@ -201,10 +201,15 @@ class ProductsController extends Controller
             ->leftJoin('characteristics as ch1', 'product_characteristics.characteristic_id', '=', 'ch1.id')
             ->leftJoin('characteristics as ch2', 'ch1.parent_id', '=', 'ch2.id')
             ->leftJoin('characteristic_attributes', 'product_characteristics.attribute_id', '=', 'characteristic_attributes.id')
-            ->where('product_id',$productId)
-            ->select('product_characteristics.value as characteristic_value','ch1.name_ru as characteristic_name','characteristic_attributes.name_ru as characteristic_attribute_name', 'ch2.name_ru as title')
-            ->get()
-            ->toArray();
+            ->where('product_id', $productId)
+            ->select('product_characteristics.value as characteristic_value','ch1.name_ru as characteristic_name','characteristic_attributes.name_ru as characteristic_attribute_name', 'ch2.name_ru as title', 'product_characteristics.characteristic_id')
+            ->orderBy('product_characteristics.characteristic_id', 'ASC')
+            ->get();
+
+        $characteristicValue = 0;
+        if (isset($characteristics[0])) {
+            $characteristicValue =  $characteristics[0]->characteristic_value;
+        }
 
         $photos = DB::table('photos')
             ->where('product_id', $productId)
@@ -231,7 +236,7 @@ class ProductsController extends Controller
         $prepayment = '';
         if ($product->available == 0) {
             $prepayment = 'Предоплата 100%';
-        }elseif ($product->price > 40000 || in_array($product->series_id, $designerConditioners)) {
+        }elseif ($product->price > 40000 || in_array($product->series_id, $designerConditioners) || $characteristicValue >= 3.8) {
             $prepayment = 'Предоплата 3%';
         }else {
             $prepayment = 'Заказ от 40 000 руб. 3% предоплата';
@@ -638,8 +643,23 @@ class ProductsController extends Controller
                 ->groupBy('products.id')
                 ->paginate(15);
 
-            $data['searchResponse'] = $searchResponse->items();
-            $data['total'] = $searchResponse->total();
+            $productPageIds = $searchResponse->pluck('id');
+
+            $characteristics = DB::table('product_characteristics')
+                ->leftJoin('characteristics', 'product_characteristics.characteristic_id', '=', 'characteristics.id')
+                ->leftJoin('characteristic_attributes', 'product_characteristics.attribute_id', '=', 'characteristic_attributes.id')
+                ->whereIn('product_id', $productPageIds)
+                ->where('product_characteristics.characteristic_id', 3)
+                ->select('product_characteristics.product_id as id', 'characteristics.name_ru as characteristic_name_ru', 'characteristic_attributes.name_ru as characteristic_attribute_name')
+                ->orderBy('characteristic_attributes.id', 'ASC')
+                ->get()->toArray();
+
+            $data['products_info']['total'] = $searchResponse->total();
+            $data['products_info']['characteristics'] = $characteristics;
+            $data['products'] = $searchResponse->items();
+
+//            $data['searchResponse'] = $searchResponse->items();
+//            $data['total'] = $searchResponse->total();
             return response()->json($data);
         }
         return [];

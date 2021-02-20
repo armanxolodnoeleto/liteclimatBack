@@ -8,7 +8,7 @@
 </head>
 <body>
 
-@if ($data['in_cart'] == 'false')
+@if (!$data['in_cart'])
     <div style="width:90%;margin:0 auto;padding-bottom: 50px;">
         <a href="https://laitklimat.ru"><img src="http://back.projects-backend.ru/public/uploads/logos/laitklimat.jpg"></a>
         <h1 style="text-align:center">Заявка с всплывающего окна</h1>
@@ -30,10 +30,10 @@
             <tr><td><h3 style="padding-right: 30px;margin:0px;"><font color="#980e0e">Номер телефона:</font></h3></td><td> {{ $data['phone'] }}</td></tr>
             <tr><td><h3 style="padding-right: 30px;margin:0px;"><font color="#980e0e">Почта:</font></h3></td><td> {{ $data['email'] }}</td></tr>
             <tr><td><h3 style="padding-right: 30px;margin:0px;"><font color="#980e0e">Модель:</font></h3></td><td>
-                {{ !empty($data['product'] ? $data['product']['name'] : '') }}</td></tr>
-            <tr><td><h3 style="padding-right: 30px;margin:0px;"><font color="#980e0e">Цена:</font></h3></td><td> {{ !empty($data['product'] ? $data['product']['price'] : '') }}</td></tr>
-            <tr><td><h3 style="padding-right: 30px;margin:0px;"><font color="#980e0e">Цена с установкой:</font></h3></td><td> {{ !empty($data['product'] ? $data['product']['price_with_setup'] : '') }}</td></tr>
-            <tr><td><h3 style="padding-right: 30px;margin:0px;"><font color="#980e0e">Цена без установки:</font></h3></td><td> {{ !empty($data['product'] ? $data['product']['price_without_setup'] : '') }}</td></tr>
+                {{ !empty($data['product'] && isset($data['product']['name']) ? $data['product']['name'] : '') }}</td></tr>
+            <tr><td><h3 style="padding-right: 30px;margin:0px;"><font color="#980e0e">Цена:</font></h3></td><td> {{ !empty($data['product'] && isset($data['product']['price']) ? $data['product']['price'] : '') }}</td></tr>
+            <tr><td><h3 style="padding-right: 30px;margin:0px;"><font color="#980e0e">Цена с установкой:</font></h3></td><td> {{ !empty($data['product'] && isset($data['product']['price_with_setup']) ? $data['product']['price_with_setup'] : '') }}</td></tr>
+            <tr><td><h3 style="padding-right: 30px;margin:0px;"><font color="#980e0e">Цена без установки:</font></h3></td><td> {{ !empty($data['product'] && isset($data['product']['price_without_setup']) ? $data['product']['price_without_setup'] : '') }}</td></tr>
         </table>
     </div>
 @endif
